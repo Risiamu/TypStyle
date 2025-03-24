@@ -17,14 +17,16 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
     std::vector<StyleInfo> styles;
     
     // Error handling for ZIP operations
-    int zipError = 0;
+    zip_error_t zipError;
+    zip_error_init(&zipError);
     std::unique_ptr<zip_t, decltype(&zip_close)> zip(
-        zip_open(filePath.c_str(), 0, &zipError),
+        zip_open(filePath.c_str(), 0, &zipError.code),
         &zip_close
     );
     
     if (!zip) {
-        std::cerr << "Failed to open DOCX file: " << zip_error_strerror(zipError) << std::endl;
+        std::cerr << "Failed to open DOCX file: " << zip_error_strerror(&zipError) << std::endl;
+        zip_error_fini(&zipError);
         return styles;
     }
 
@@ -85,7 +87,7 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
             // Process style properties (simplified)
             for (xmlNodePtr prop = node->children; prop; prop = prop->next) {
                 if (prop->type == XML_ELEMENT_NODE) {
-                    std::string propName(reinterpret_cast<char*>(prop->name));
+                    std::string propName(reinterpret_cast<const char*>(prop->name));
                     style.properties[propName] = ""; // Actual implementation would extract values
                 }
             }
