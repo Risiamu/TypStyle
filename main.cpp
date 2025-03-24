@@ -23,7 +23,7 @@ int main() {
         // Check if file exists first
         if (FILE* file = fopen(docxPath.c_str(), "r")) {
             fclose(file);
-            auto styles = extractDocxStyles(docxPath);
+            auto styles = DocxParser::extractDocxStyles(docxPath);
             
             if (styles.empty()) {
                 std::cout << "No styles found in the document.\n";
@@ -32,15 +32,15 @@ int main() {
                 for (const auto& style : styles) {
                     std::cout << "\nStyle: " << style.name 
                               << " (Type: " << style.type << ")\n";
-                    cout << "Properties:\n";
+                    std::cout << "Properties:\n";
                     if (!style.fontName.empty()) {
-                        cout << "  Font: " << style.fontName << "\n";
+                        std::cout << "  Font: " << style.fontName << "\n";
                     }
                     if (!style.fontSize.empty()) {
-                        cout << "  Font Size: " << style.fontSize << "\n";
+                        std::cout << "  Font Size: " << style.fontSize << "\n";
                     }
                     for (const auto& prop : style.properties) {
-                        cout << "  " << prop.first << ": " 
+                        std::cout << "  " << prop.first << ": " 
                              << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
                     }
                 }

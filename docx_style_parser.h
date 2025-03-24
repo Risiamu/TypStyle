@@ -5,6 +5,9 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <zip.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 // Forward declarations
 struct zip_t;

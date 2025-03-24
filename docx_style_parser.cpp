@@ -1,6 +1,9 @@
 #include "docx_style_parser.h"
 #include <iostream>
 #include <stdexcept>
+#include <zip.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 using namespace std;
 
