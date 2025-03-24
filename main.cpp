@@ -32,24 +32,16 @@ int main() {
                 for (const auto& style : styles) {
                     std::cout << "\nStyle: " << style.name 
                               << " (Type: " << style.type << ")\n";
-                    std::cout << "Properties:\n";
-                    // Display font info first if available
-                    if (style.properties.count("font:ascii")) {
-                        std::cout << "  Font: " << style.properties.at("font:ascii");
-                        if (style.properties.count("font:eastAsia")) {
-                            std::cout << " / " << style.properties.at("font:eastAsia");
-                        }
-                        std::cout << "\n";
+                    cout << "Properties:\n";
+                    if (!style.fontName.empty()) {
+                        cout << "  Font: " << style.fontName << "\n";
                     }
-                    if (style.properties.count("font:size")) {
-                        std::cout << "  Font Size: " << style.properties.at("font:size") << "\n";
+                    if (!style.fontSize.empty()) {
+                        cout << "  Font Size: " << style.fontSize << "\n";
                     }
-                    // Display other properties
                     for (const auto& prop : style.properties) {
-                        if (prop.first.find("font:") == std::string::npos) { // Skip already shown font props
-                            std::cout << "  " << prop.first << ": " 
-                                      << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
-                        }
+                        cout << "  " << prop.first << ": " 
+                             << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
                     }
                 }
             }

@@ -1,30 +1,15 @@
-#include <zip.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <string>
-#include <vector>
-#include <map>
+#include "docx_style_parser.h"
 #include <iostream>
-#include <memory>
+#include <stdexcept>
 
-struct StyleInfo {
-    std::string name;
-    std::string type;  // "paragraph", "character", "table", etc.
-    std::map<std::string, std::string> properties;
-};
+using namespace std;
 
-std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
-    std::vector<StyleInfo> styles;
-    
-    // Error handling for ZIP operations
+// Zip file handling functions
+unique_ptr<zip_t, void(*)(zip_t*)> openDocxFile(const string& filePath) {
     int zipError = 0;
-    std::unique_ptr<zip_t, decltype(&zip_close)> zip(
-        zip_open(filePath.c_str(), 0, &zipError),
-        &zip_close
-    );
-    
+    zip_t* zip = zip_open(filePath.c_str(), 0, &zipError);
     if (!zip) {
-        std::string errorMsg = "Failed to open DOCX file: ";
+        string errorMsg = "Failed to open DOCX file: ";
         if (zipError != 0) {
             zip_error_t error;
             zip_error_init_with_code(&error, zipError);
@@ -33,121 +18,131 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
         } else {
             errorMsg += zip_strerror(nullptr);
         }
-        throw std::runtime_error(errorMsg);
+        throw runtime_error(errorMsg);
     }
+    return unique_ptr<zip_t, void(*)(zip_t*)>(zip, zip_close);
+}
 
-    // Locate styles.xml in the archive
+vector<char> readStylesXml(zip_t* zip) {
     zip_stat_t stats;
-    if (zip_stat(zip.get(), "word/styles.xml", 0, &stats) != 0) {
-        throw std::runtime_error("styles.xml not found in DOCX archive - this may not be a valid DOCX file");
+    if (zip_stat(zip, "word/styles.xml", 0, &stats) != 0) {
+        throw runtime_error("styles.xml not found in DOCX archive");
     }
 
-    // Read styles.xml content
-    std::unique_ptr<zip_file_t, decltype(&zip_fclose)> stylesFile(
-        zip_fopen(zip.get(), "word/styles.xml", 0),
-        &zip_fclose
+    unique_ptr<zip_file_t, void(*)(zip_file_t*)> stylesFile(
+        zip_fopen(zip, "word/styles.xml", 0),
+        zip_fclose
     );
-    
+
     if (!stylesFile) {
-        throw std::runtime_error("Failed to open styles.xml in archive - file may be corrupted");
+        throw runtime_error("Failed to open styles.xml in archive");
     }
 
-    std::vector<char> buffer(stats.size);
+    vector<char> buffer(stats.size);
     if (zip_fread(stylesFile.get(), buffer.data(), buffer.size()) != static_cast<zip_int64_t>(buffer.size())) {
-        throw std::runtime_error("Failed to read styles.xml content - file may be corrupted");
+        throw runtime_error("Failed to read styles.xml content");
     }
 
-    // Parse XML content
-    std::unique_ptr<xmlDoc, decltype(&xmlFreeDoc)> doc(
-        xmlReadMemory(buffer.data(), buffer.size(), "styles.xml", NULL, 0),
-        &xmlFreeDoc
-    );
-    
+    return buffer;
+}
+
+// XML parsing functions
+unique_ptr<xmlDoc, void(*)(xmlDocPtr)> parseXml(const vector<char>& xmlData) {
+    xmlDocPtr doc = xmlReadMemory(xmlData.data(), xmlData.size(), "styles.xml", NULL, 0);
     if (!doc) {
-        throw std::runtime_error("Failed to parse styles.xml content - invalid XML format");
+        throw runtime_error("Failed to parse styles.xml content");
     }
+    return unique_ptr<xmlDoc, void(*)(xmlDocPtr)>(doc, xmlFreeDoc);
+}
 
-    // Process XML nodes
-    xmlNodePtr root = xmlDocGetRootElement(doc.get());
+vector<xmlNodePtr> findStyleNodes(xmlDocPtr doc) {
+    vector<xmlNodePtr> styleNodes;
+    xmlNodePtr root = xmlDocGetRootElement(doc);
+    
     for (xmlNodePtr node = root->children; node; node = node->next) {
         if (node->type == XML_ELEMENT_NODE && 
             xmlStrcmp(node->name, (const xmlChar*)"style") == 0) {
-            
-            StyleInfo style;
-            
-            // Get style attributes
-            if (auto name = xmlGetProp(node, (const xmlChar*)"name")) {
-                style.name = reinterpret_cast<char*>(name);
-                xmlFree(name);
-            }
-            
-            if (auto type = xmlGetProp(node, (const xmlChar*)"type")) {
-                style.type = reinterpret_cast<char*>(type);
-                xmlFree(type);
-            }
+            styleNodes.push_back(node);
+        }
+    }
+    return styleNodes;
+}
 
-            // Process style properties
-            for (xmlNodePtr prop = node->children; prop; prop = prop->next) {
-                if (prop->type == XML_ELEMENT_NODE) {
-                    std::string propName(reinterpret_cast<const char*>(prop->name));
-                    
-                    // Special handling for rPr (run properties) which contains font info
-                    if (propName == "rPr") {
-                        for (xmlNodePtr rPrChild = prop->children; rPrChild; rPrChild = rPrChild->next) {
-                            if (rPrChild->type == XML_ELEMENT_NODE) {
-                                std::string childName(reinterpret_cast<const char*>(rPrChild->name));
-                                
-                                // Extract font names
-                                if (childName == "rFonts") {
-                                    for (xmlAttr* attr = rPrChild->properties; attr; attr = attr->next) {
-                                        std::string attrName(reinterpret_cast<const char*>(attr->name));
-                                        if (attrName == "ascii" || attrName == "hAnsi" || attrName == "eastAsia") {
-                                            xmlChar* attrValue = xmlGetProp(rPrChild, attr->name);
-                                            if (attrValue) {
-                                                style.properties["font:" + attrName] = reinterpret_cast<char*>(attrValue);
-                                                xmlFree(attrValue);
-                                            }
-                                        }
-                                    }
-                                }
-                                // Extract font size
-                                else if (childName == "sz") {
-                                    for (xmlAttr* attr = rPrChild->properties; attr; attr = attr->next) {
-                                        std::string attrName(reinterpret_cast<const char*>(attr->name));
-                                        if (attrName == "val") {
-                                            xmlChar* attrValue = xmlGetProp(rPrChild, attr->name);
-                                            if (attrValue) {
-                                                style.properties["font:size"] = reinterpret_cast<char*>(attrValue);
-                                                xmlFree(attrValue);
-                                            }
-                                        }
-                                    }
-                                }
-                                // Extract other properties normally
-                                else {
-                                    xmlChar* content = xmlNodeGetContent(rPrChild);
-                                    if (content) {
-                                        style.properties[childName] = reinterpret_cast<char*>(content);
-                                        xmlFree(content);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // Process other properties normally
-                    else {
-                        xmlChar* content = xmlNodeGetContent(prop);
-                        if (content) {
-                            style.properties[propName] = reinterpret_cast<char*>(content);
-                            xmlFree(content);
-                        }
+// Style processing functions
+void extractFontProperties(xmlNodePtr rPrNode, StyleInfo& style) {
+    for (xmlNodePtr child = rPrNode->children; child; child = child->next) {
+        if (child->type != XML_ELEMENT_NODE) continue;
+        
+        string nodeName(reinterpret_cast<const char*>(child->name));
+        
+        if (nodeName == "rFonts") {
+            for (xmlAttr* attr = child->properties; attr; attr = attr->next) {
+                string attrName(reinterpret_cast<const char*>(attr->name));
+                if (attrName == "ascii" || attrName == "hAnsi" || attrName == "eastAsia") {
+                    xmlChar* value = xmlGetProp(child, attr->name);
+                    if (value) {
+                        style.fontName = reinterpret_cast<char*>(value);
+                        xmlFree(value);
+                        break; // Just get the first font name we find
                     }
                 }
             }
-            
-            styles.push_back(std::move(style));
+        }
+        else if (nodeName == "sz") {
+            xmlChar* size = xmlGetProp(child, (const xmlChar*)"val");
+            if (size) {
+                style.fontSize = reinterpret_cast<char*>(size);
+                xmlFree(size);
+            }
         }
     }
+}
 
+void extractOtherProperties(xmlNodePtr node, StyleInfo& style) {
+    for (xmlNodePtr prop = node->children; prop; prop = prop->next) {
+        if (prop->type != XML_ELEMENT_NODE) continue;
+        
+        string propName(reinterpret_cast<const char*>(prop->name));
+        if (propName == "rPr") {
+            extractFontProperties(prop, style);
+        } else {
+            xmlChar* content = xmlNodeGetContent(prop);
+            if (content) {
+                style.properties[propName] = reinterpret_cast<char*>(content);
+                xmlFree(content);
+            }
+        }
+    }
+}
+
+StyleInfo processStyleNode(xmlNodePtr node) {
+    StyleInfo style;
+    
+    if (auto name = xmlGetProp(node, (const xmlChar*)"name")) {
+        style.name = reinterpret_cast<char*>(name);
+        xmlFree(name);
+    }
+    
+    if (auto type = xmlGetProp(node, (const xmlChar*)"type")) {
+        style.type = reinterpret_cast<char*>(type);
+        xmlFree(type);
+    }
+
+    extractOtherProperties(node, style);
+    return style;
+}
+
+// Main interface
+vector<StyleInfo> extractDocxStyles(const string& filePath) {
+    auto zip = openDocxFile(filePath);
+    auto stylesXml = readStylesXml(zip.get());
+    auto doc = parseXml(stylesXml);
+    auto styleNodes = findStyleNodes(doc.get());
+    
+    vector<StyleInfo> styles;
+    for (auto node : styleNodes) {
+        styles.push_back(processStyleNode(node));
+    }
+    
     return styles;
 }
