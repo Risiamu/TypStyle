@@ -15,14 +15,15 @@ int main() {
         std::cout << "i = " << i << std::endl;
     }
 
-    // Extract and display DOCX styles
-    std::cout << "\nExtracting styles from sample.docx...\n";
-    auto styles = extractDocxStyles("sample.docx");
-    
-    if (styles.empty()) {
-        std::cout << "No styles found or error reading file.\n";
-    } else {
-        std::cout << "Found " << styles.size() << " styles:\n";
+    try {
+        // Extract and display DOCX styles
+        std::cout << "\nExtracting styles from sample.docx...\n";
+        auto styles = extractDocxStyles("sample.docx");
+        
+        if (styles.empty()) {
+            std::cout << "No styles found in the document.\n";
+        } else {
+            std::cout << "Found " << styles.size() << " styles:\n";
         for (const auto& style : styles) {
             std::cout << "\nStyle: " << style.name 
                       << " (Type: " << style.type << ")\n";
@@ -32,6 +33,12 @@ int main() {
                           << (value.empty() ? "[no value]" : value) << "\n";
             }
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    } catch (...) {
+        std::cerr << "Unknown error occurred" << std::endl;
+        return 1;
     }
 
     return 0;

@@ -23,3 +23,16 @@ target_link_libraries(TypStyle PRIVATE
     libzip::zip
     LibXml2::LibXml2
 )
+
+# Copy required DLLs to build directory
+add_custom_command(TARGET TypStyle POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-windows/bin/libzip.dll"
+        $<TARGET_FILE_DIR:TypStyle>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/bin/libxml2.dll"
+        $<TARGET_FILE_DIR:TypStyle>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/zlib_x64-windows/bin/zlib.dll"
+        $<TARGET_FILE_DIR:TypStyle>
+)
