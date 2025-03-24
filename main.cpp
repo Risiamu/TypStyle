@@ -17,11 +17,33 @@ int main() {
 
     try {
         // Extract and display DOCX styles
-        std::cout << "\nExtracting styles from sample.docx...\n";
-        auto styles = extractDocxStyles("sample.docx");
+        const std::string docxPath = "sample.docx";
+        std::cout << "\nExtracting styles from " << docxPath << "...\n";
         
-        if (styles.empty()) {
-            std::cout << "No styles found in the document.\n";
+        // Check if file exists first
+        if (FILE* file = fopen(docxPath.c_str(), "r")) {
+            fclose(file);
+            auto styles = extractDocxStyles(docxPath);
+            
+            if (styles.empty()) {
+                std::cout << "No styles found in the document.\n";
+            } else {
+                std::cout << "Found " << styles.size() << " styles:\n";
+                for (const auto& style : styles) {
+                    std::cout << "\nStyle: " << style.name 
+                              << " (Type: " << style.type << ")\n";
+                    std::cout << "Properties:\n";
+                    for (const auto& prop : style.properties) {
+                        std::cout << "  " << prop.first << ": " 
+                                  << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
+                    }
+                }
+            }
+        } else {
+            std::cerr << "Error: File not found - " << docxPath << "\n";
+            std::cerr << "Please ensure the file exists in the same directory as the executable.\n";
+            return 1;
+        }
         } else {
             std::cout << "Found " << styles.size() << " styles:\n";
             for (const auto& style : styles) {

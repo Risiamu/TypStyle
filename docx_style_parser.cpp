@@ -24,15 +24,19 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
     );
     
     if (!zip) {
-        std::cerr << "Failed to open DOCX file: " << zip_strerror(nullptr) << std::endl;
-        return styles;
+        std::string errorMsg = "Failed to open DOCX file: ";
+        if (zipError != 0) {
+            errorMsg += zip_error_strerror(zip_error_t{zipError});
+        } else {
+            errorMsg += zip_strerror(nullptr);
+        }
+        throw std::runtime_error(errorMsg);
     }
 
     // Locate styles.xml in the archive
     zip_stat_t stats;
     if (zip_stat(zip.get(), "word/styles.xml", 0, &stats) != 0) {
-        std::cerr << "styles.xml not found in DOCX archive" << std::endl;
-        return styles;
+        throw std::runtime_error("styles.xml not found in DOCX archive - this may not be a valid DOCX file");
     }
 
     // Read styles.xml content
@@ -42,14 +46,12 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
     );
     
     if (!stylesFile) {
-        std::cerr << "Failed to open styles.xml in archive" << std::endl;
-        return styles;
+        throw std::runtime_error("Failed to open styles.xml in archive - file may be corrupted");
     }
 
     std::vector<char> buffer(stats.size);
     if (zip_fread(stylesFile.get(), buffer.data(), buffer.size()) != static_cast<zip_int64_t>(buffer.size())) {
-        std::cerr << "Failed to read styles.xml content" << std::endl;
-        return styles;
+        throw std::runtime_error("Failed to read styles.xml content - file may be corrupted");
     }
 
     // Parse XML content
@@ -59,8 +61,7 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
     );
     
     if (!doc) {
-        std::cerr << "Failed to parse styles.xml content" << std::endl;
-        return styles;
+        throw std::runtime_error("Failed to parse styles.xml content - invalid XML format");
     }
 
     // Process XML nodes
