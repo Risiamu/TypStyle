@@ -17,16 +17,14 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
     std::vector<StyleInfo> styles;
     
     // Error handling for ZIP operations
-    zip_error_t zipError;
-    zip_error_init(&zipError);
+    int zipError = 0;
     std::unique_ptr<zip_t, decltype(&zip_close)> zip(
-        zip_open(filePath.c_str(), 0, &zipError.code),
+        zip_open(filePath.c_str(), 0, &zipError),
         &zip_close
     );
     
     if (!zip) {
-        std::cerr << "Failed to open DOCX file: " << zip_error_strerror(&zipError) << std::endl;
-        zip_error_fini(&zipError);
+        std::cerr << "Failed to open DOCX file: " << zip_strerror(nullptr) << std::endl;
         return styles;
     }
 
