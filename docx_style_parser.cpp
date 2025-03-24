@@ -26,7 +26,10 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
     if (!zip) {
         std::string errorMsg = "Failed to open DOCX file: ";
         if (zipError != 0) {
-            errorMsg += zip_error_strerror(zip_error_t{zipError});
+            zip_error_t error;
+            zip_error_init_with_code(&error, zipError);
+            errorMsg += zip_error_strerror(&error);
+            zip_error_fini(&error);
         } else {
             errorMsg += zip_strerror(nullptr);
         }
