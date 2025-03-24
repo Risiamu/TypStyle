@@ -1,6 +1,5 @@
 #include <iostream>
-
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+#include "docx_style_parser.h"
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 int main() {
     // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
@@ -14,6 +13,25 @@ int main() {
         // breakpoint for you, but you can always add more by pressing
         // <shortcut actionId="ToggleLineBreakpoint"/>.
         std::cout << "i = " << i << std::endl;
+    }
+
+    // Extract and display DOCX styles
+    std::cout << "\nExtracting styles from sample.docx...\n";
+    auto styles = extractDocxStyles("sample.docx");
+    
+    if (styles.empty()) {
+        std::cout << "No styles found or error reading file.\n";
+    } else {
+        std::cout << "Found " << styles.size() << " styles:\n";
+        for (const auto& style : styles) {
+            std::cout << "\nStyle: " << style.name 
+                      << " (Type: " << style.type << ")\n";
+            std::cout << "Properties:\n";
+            for (const auto& [key, value] : style.properties) {
+                std::cout << "  " << key << ": " 
+                          << (value.empty() ? "[no value]" : value) << "\n";
+            }
+        }
     }
 
     return 0;
