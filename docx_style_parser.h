@@ -5,8 +5,17 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <zip.h>
-#include <libxml/parser.h>
+
+// Forward declarations
+struct zip_t;
+struct zip_file_t;
+struct zip_stat_t;
+struct zip_error_t;
+typedef struct _xmlDoc xmlDoc;
+typedef xmlDoc* xmlDocPtr;
+typedef struct _xmlNode xmlNode;
+typedef xmlNode* xmlNodePtr;
+typedef struct _xmlAttr xmlAttr;
 
 struct StyleInfo {
     std::string name;
@@ -15,6 +24,8 @@ struct StyleInfo {
     std::string fontName;
     std::string fontSize;
 };
+
+namespace DocxParser {
 
 // Zip file handling
 std::unique_ptr<zip_t, void(*)(zip_t*)> openDocxFile(const std::string& filePath);
@@ -31,5 +42,7 @@ void extractOtherProperties(xmlNodePtr node, StyleInfo& style);
 
 // Main interface
 std::vector<StyleInfo> extractDocxStyles(const std::string& filePath);
+
+} // namespace DocxParser
 
 #endif // DOCX_STYLE_PARSER_H
