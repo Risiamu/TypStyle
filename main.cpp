@@ -28,9 +28,9 @@ int main() {
                 std::cout << "\nStyle: " << style.name 
                           << " (Type: " << style.type << ")\n";
                 std::cout << "Properties:\n";
-                for (const auto& [key, value] : style.properties) {
-                    std::cout << "  " << key << ": " 
-                              << (value.empty() ? "[no value]" : value) << "\n";
+                for (const auto& prop : style.properties) {
+                    std::cout << "  " << prop.first << ": " 
+                              << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
                 }
             }
         }
