@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <zip.h>
+#include <zipconf.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -14,12 +15,9 @@ unique_ptr<zip_t, zip_close_t> openDocxFile(const string& filePath) {
     if (!zip) {
         string errorMsg = "Failed to open DOCX file: ";
         if (zipError != 0) {
-            zip_error_t* error = zip_error_new();
-            zip_error_init_with_code(error, zipError);
-            errorMsg += zip_error_strerror(error);
-            zip_error_free(error);
+            errorMsg += "Error code: " + to_string(zipError);
         } else {
-            errorMsg += zip_strerror(zip);
+            errorMsg += "Unknown error";
         }
         throw runtime_error(errorMsg);
     }
