@@ -23,17 +23,27 @@ namespace DocxParser {
  * 3. Provides basic error handling if opening fails
  */
 unique_ptr<zip_t, zip_close_t> openDocxFile(const string& filePath) {
-    int zipError = 0;
+    // In C++, we use raw pointers (zip_t*) to interface with C libraries
+    int zipError = 0;  // Will store error code if opening fails
+    
+    // zip_open is a C function that returns a pointer to a zip archive
+    // filePath.c_str() converts C++ string to C-style null-terminated string
     zip_t* zip = zip_open(filePath.c_str(), 0, &zipError);
+    
     if (!zip) {
+        // Error handling - unlike Python, we need to manually build error messages
         string errorMsg = "Failed to open DOCX file: ";
         if (zipError != 0) {
-            errorMsg += "Error code: " + to_string(zipError);
+            errorMsg += "Error code: " + to_string(zipError);  // Convert number to string
         } else {
             errorMsg += "Unknown error";
         }
-        throw runtime_error(errorMsg);
+        throw runtime_error(errorMsg);  // Throw exception like Python's raise
     }
+    
+    // unique_ptr is a smart pointer that automatically deletes the resource
+    // when it goes out of scope. We provide a custom deleter (&zip_close)
+    // because zip_t needs special cleanup
     return unique_ptr<zip_t, zip_close_t>(zip, &zip_close);
 }
 
@@ -50,26 +60,41 @@ unique_ptr<zip_t, zip_close_t> openDocxFile(const string& filePath) {
  * 3. Returns the raw XML data for parsing
  */
 vector<char> readStylesXml(zip_t* zip) {
+    // zip_stat_t is a C struct that will hold file information
+    // The = {} syntax initializes all fields to zero (unlike Python where 
+    // variables are automatically initialized)
     zip_stat_t stats = {};
+    
+    // Check if styles.xml exists in the zip archive
     if (zip_stat(zip, "word/styles.xml", 0, &stats) != 0) {
         throw runtime_error("styles.xml not found in DOCX archive");
     }
 
+    // Open the file inside the zip archive
+    // We use unique_ptr with custom deleter to ensure the file gets closed
     unique_ptr<zip_file_t, zip_fclose_t> stylesFile(
-        zip_fopen(zip, "word/styles.xml", 0),
-        &zip_fclose
+        zip_fopen(zip, "word/styles.xml", 0),  // C function call
+        &zip_fclose  // Custom deleter function
     );
 
-    if (!stylesFile) {
+    if (!stylesFile) {  // Check if opening succeeded
         throw runtime_error("Failed to open styles.xml in archive");
     }
 
+    // Create a vector (similar to Python list) with enough space for the file
+    // Unlike Python lists, C++ vectors need their size specified upfront
     vector<char> buffer(stats.size);
-    if (zip_fread(stylesFile.get(), buffer.data(), buffer.size()) != static_cast<zip_int64_t>(buffer.size())) {
+    
+    // Read file content into buffer
+    // get() gets the raw pointer from unique_ptr
+    // data() gets pointer to vector's underlying array
+    // static_cast converts between numeric types explicitly
+    if (zip_fread(stylesFile.get(), buffer.data(), buffer.size()) != 
+        static_cast<zip_int64_t>(buffer.size())) {
         throw runtime_error("Failed to read styles.xml content");
     }
 
-    return buffer;
+    return buffer;  // Return by value (C++ handles this efficiently)
 }
 
 // XML parsing functions
@@ -84,10 +109,21 @@ vector<char> readStylesXml(zip_t* zip) {
  * document object can be traversed using libxml2's DOM API.
  */
 unique_ptr<xmlDoc, void(*)(xmlDocPtr)> parseXml(const vector<char>& xmlData) {
+    // xmlReadMemory parses XML from a memory buffer (not from file)
+    // Parameters:
+    // 1. Pointer to XML data (vector's data() method)
+    // 2. Size of data
+    // 3. "Filename" for error messages
+    // 4. Encoding (NULL for auto-detect)
+    // 5. Parser options (0 for defaults)
     xmlDocPtr doc = xmlReadMemory(xmlData.data(), xmlData.size(), "styles.xml", NULL, 0);
-    if (!doc) {
+    
+    if (!doc) {  // Check if parsing succeeded
         throw runtime_error("Failed to parse styles.xml content");
     }
+    
+    // Create unique_ptr with custom deleter function (xmlFreeDoc)
+    // The function pointer syntax looks complex but ensures proper cleanup
     return unique_ptr<xmlDoc, void(*)(xmlDocPtr)>(doc, xmlFreeDoc);
 }
 
@@ -101,12 +137,23 @@ unique_ptr<xmlDoc, void(*)(xmlDocPtr)> parseXml(const vector<char>& xmlData) {
  * represent individual style definitions in the DOCX file.
  */
 vector<xmlNodePtr> findStyleNodes(xmlDocPtr doc) {
+    // Create empty vector to store node pointers
     vector<xmlNodePtr> styleNodes;
+    
+    // Get root element of XML document
     xmlNodePtr root = xmlDocGetRootElement(doc);
     
+    // Iterate through all child nodes of root
+    // Unlike Python's for loops, this is a manual linked list traversal:
+    // - Start with first child (root->children)
+    // - Continue while node is not null (node)
+    // - Move to next sibling (node = node->next)
     for (xmlNodePtr node = root->children; node; node = node->next) {
+        // Check if node is an element node (not text/comment/etc)
+        // and if its name is "style"
         if (node->type == XML_ELEMENT_NODE && 
             xmlStrcmp(node->name, (const xmlChar*)"style") == 0) {
+            // Add node pointer to vector
             styleNodes.push_back(node);
         }
     }
@@ -126,18 +173,29 @@ vector<xmlNodePtr> findStyleNodes(xmlDocPtr doc) {
  * Any found properties are stored in the StyleInfo struct.
  */
 void extractFontProperties(xmlNodePtr rPrNode, StyleInfo& style) {
+    // Iterate through all child nodes of rPrNode
     for (xmlNodePtr child = rPrNode->children; child; child = child->next) {
+        // Skip non-element nodes (text nodes, comments etc)
         if (child->type != XML_ELEMENT_NODE) continue;
         
+        // Convert XML node name (xmlChar*) to C++ string
+        // reinterpret_cast is used to convert between pointer types
         string nodeName(reinterpret_cast<const char*>(child->name));
         
         if (nodeName == "rFonts") {
+            // Handle font name properties
+            // Iterate through all attributes of the node
             for (xmlAttr* attr = child->properties; attr; attr = attr->next) {
                 string attrName(reinterpret_cast<const char*>(attr->name));
+                
+                // We're interested in these font name attributes
                 if (attrName == "ascii" || attrName == "hAnsi" || attrName == "eastAsia") {
+                    // Get attribute value - returns allocated string we must free
                     xmlChar* value = xmlGetProp(child, attr->name);
                     if (value) {
+                        // Store font name in style struct
                         style.fontName = reinterpret_cast<char*>(value);
+                        // Free the allocated string - C++ doesn't have garbage collection
                         xmlFree(value);
                         break; // Just get the first font name we find
                     }
@@ -145,10 +203,11 @@ void extractFontProperties(xmlNodePtr rPrNode, StyleInfo& style) {
             }
         }
         else if (nodeName == "sz") {
+            // Handle font size property
             xmlChar* size = xmlGetProp(child, (const xmlChar*)"val");
             if (size) {
                 style.fontSize = reinterpret_cast<char*>(size);
-                xmlFree(size);
+                xmlFree(size);  // Don't forget to free allocated memory!
             }
         }
     }
