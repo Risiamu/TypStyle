@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Find required libraries
 list(APPEND CMAKE_PREFIX_PATH 
-    "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-mingw-dynamic/share/libzip"
+    "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-windows/share/libzip"
     "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/share/libxml2"
 )
 
@@ -27,12 +27,12 @@ target_link_libraries(TypStyle PRIVATE
 # Copy required DLLs to build directory
 add_custom_command(TARGET TypStyle POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-mingw-dynamic/bin/libzip.dll"
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-windows/bin/zip.dll"
         $<TARGET_FILE_DIR:TypStyle>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/bin/libxml2.dll"
         $<TARGET_FILE_DIR:TypStyle>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/zlib_x64-mingw-dynamic/bin/libzlib1.dll"
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/zlib_x64-windows/bin/zlib1.dll"
         $<TARGET_FILE_DIR:TypStyle>
 )
