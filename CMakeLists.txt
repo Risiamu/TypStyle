@@ -16,7 +16,7 @@ list(APPEND CMAKE_PREFIX_PATH
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
 
-add_executable(TypStyle main.cpp docx_style_parser.cpp)
+add_executable(TypStyle main.cpp docx_style_parser.cpp docx_style_parser.h)
 
 # Link libraries
 target_link_libraries(TypStyle PRIVATE
