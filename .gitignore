@@ -1,3 +1,4 @@
 .aider*
 /cmake-build-debug/
 .idea
+/cmake-build-debug-visual-studio/
