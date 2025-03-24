@@ -86,11 +86,29 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
                 xmlFree(type);
             }
 
-            // Process style properties (simplified)
+            // Process style properties
             for (xmlNodePtr prop = node->children; prop; prop = prop->next) {
                 if (prop->type == XML_ELEMENT_NODE) {
                     std::string propName(reinterpret_cast<const char*>(prop->name));
-                    style.properties[propName] = ""; // Actual implementation would extract values
+                    
+                    // Get property content
+                    xmlChar* content = xmlNodeGetContent(prop);
+                    if (content) {
+                        style.properties[propName] = reinterpret_cast<char*>(content);
+                        xmlFree(content);
+                    } else {
+                        style.properties[propName] = "";
+                    }
+
+                    // Also process attributes
+                    for (xmlAttr* attr = prop->properties; attr; attr = attr->next) {
+                        std::string attrName = std::string(reinterpret_cast<const char*>(attr->name));
+                        xmlChar* attrValue = xmlGetProp(prop, attr->name);
+                        if (attrValue) {
+                            style.properties[propName + ":" + attrName] = reinterpret_cast<char*>(attrValue);
+                            xmlFree(attrValue);
+                        }
+                    }
                 }
             }
             
