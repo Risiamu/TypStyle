@@ -91,22 +91,55 @@ std::vector<StyleInfo> extractDocxStyles(const std::string& filePath) {
                 if (prop->type == XML_ELEMENT_NODE) {
                     std::string propName(reinterpret_cast<const char*>(prop->name));
                     
-                    // Get property content
-                    xmlChar* content = xmlNodeGetContent(prop);
-                    if (content) {
-                        style.properties[propName] = reinterpret_cast<char*>(content);
-                        xmlFree(content);
-                    } else {
-                        style.properties[propName] = "";
+                    // Special handling for rPr (run properties) which contains font info
+                    if (propName == "rPr") {
+                        for (xmlNodePtr rPrChild = prop->children; rPrChild; rPrChild = rPrChild->next) {
+                            if (rPrChild->type == XML_ELEMENT_NODE) {
+                                std::string childName(reinterpret_cast<const char*>(rPrChild->name));
+                                
+                                // Extract font names
+                                if (childName == "rFonts") {
+                                    for (xmlAttr* attr = rPrChild->properties; attr; attr = attr->next) {
+                                        std::string attrName(reinterpret_cast<const char*>(attr->name));
+                                        if (attrName == "ascii" || attrName == "hAnsi" || attrName == "eastAsia") {
+                                            xmlChar* attrValue = xmlGetProp(rPrChild, attr->name);
+                                            if (attrValue) {
+                                                style.properties["font:" + attrName] = reinterpret_cast<char*>(attrValue);
+                                                xmlFree(attrValue);
+                                            }
+                                        }
+                                    }
+                                }
+                                // Extract font size
+                                else if (childName == "sz") {
+                                    for (xmlAttr* attr = rPrChild->properties; attr; attr = attr->next) {
+                                        std::string attrName(reinterpret_cast<const char*>(attr->name));
+                                        if (attrName == "val") {
+                                            xmlChar* attrValue = xmlGetProp(rPrChild, attr->name);
+                                            if (attrValue) {
+                                                style.properties["font:size"] = reinterpret_cast<char*>(attrValue);
+                                                xmlFree(attrValue);
+                                            }
+                                        }
+                                    }
+                                }
+                                // Extract other properties normally
+                                else {
+                                    xmlChar* content = xmlNodeGetContent(rPrChild);
+                                    if (content) {
+                                        style.properties[childName] = reinterpret_cast<char*>(content);
+                                        xmlFree(content);
+                                    }
+                                }
+                            }
+                        }
                     }
-
-                    // Also process attributes
-                    for (xmlAttr* attr = prop->properties; attr; attr = attr->next) {
-                        std::string attrName = std::string(reinterpret_cast<const char*>(attr->name));
-                        xmlChar* attrValue = xmlGetProp(prop, attr->name);
-                        if (attrValue) {
-                            style.properties[propName + ":" + attrName] = reinterpret_cast<char*>(attrValue);
-                            xmlFree(attrValue);
+                    // Process other properties normally
+                    else {
+                        xmlChar* content = xmlNodeGetContent(prop);
+                        if (content) {
+                            style.properties[propName] = reinterpret_cast<char*>(content);
+                            xmlFree(content);
                         }
                     }
                 }
