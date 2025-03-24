@@ -44,18 +44,6 @@ int main() {
             std::cerr << "Please ensure the file exists in the same directory as the executable.\n";
             return 1;
         }
-        } else {
-            std::cout << "Found " << styles.size() << " styles:\n";
-            for (const auto& style : styles) {
-                std::cout << "\nStyle: " << style.name 
-                          << " (Type: " << style.type << ")\n";
-                std::cout << "Properties:\n";
-                for (const auto& prop : style.properties) {
-                    std::cout << "  " << prop.first << ": " 
-                              << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
-                }
-            }
-        }
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
