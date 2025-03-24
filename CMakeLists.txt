@@ -8,19 +8,18 @@ set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/.vcpkg-clion/vcpkg/scripts/buildsystems
 set(CMAKE_CXX_STANDARD 11)
 
 # Find required libraries
-find_package(ZIP REQUIRED)
-find_package(LibXml2 REQUIRED)
+list(APPEND CMAKE_PREFIX_PATH 
+    "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-mingw-dynamic/share/libzip"
+    "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/share/libxml2"
+)
+
+find_package(libzip CONFIG REQUIRED)
+find_package(LibXml2 CONFIG REQUIRED)
 
 add_executable(TypStyle main.cpp docx_style_parser.cpp)
 
 # Link libraries
 target_link_libraries(TypStyle PRIVATE
-    ${ZIP_LIBRARIES}
-    ${LIBXML2_LIBRARIES}
-)
-
-# Include directories
-target_include_directories(TypStyle PRIVATE
-    ${ZIP_INCLUDE_DIRS}
-    ${LIBXML2_INCLUDE_DIR}
+    libzip::zip
+    LibXml2::LibXml2
 )
