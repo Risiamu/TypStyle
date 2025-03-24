@@ -8,33 +8,33 @@
 using namespace std;
 
 // Zip file handling functions
-unique_ptr<zip_t, void(*)(zip_t*)> openDocxFile(const string& filePath) {
+unique_ptr<zip_t, zip_close_t> openDocxFile(const string& filePath) {
     int zipError = 0;
     zip_t* zip = zip_open(filePath.c_str(), 0, &zipError);
     if (!zip) {
         string errorMsg = "Failed to open DOCX file: ";
         if (zipError != 0) {
-            zip_error_t error;
-            zip_error_init_with_code(&error, zipError);
-            errorMsg += zip_error_strerror(&error);
-            zip_error_fini(&error);
+            zip_error_t* error = zip_error_new();
+            zip_error_init_with_code(error, zipError);
+            errorMsg += zip_error_strerror(error);
+            zip_error_free(error);
         } else {
-            errorMsg += zip_strerror(nullptr);
+            errorMsg += zip_strerror(zip);
         }
         throw runtime_error(errorMsg);
     }
-    return unique_ptr<zip_t, void(*)(zip_t*)>(zip, zip_close);
+    return unique_ptr<zip_t, zip_close_t>(zip, &zip_close);
 }
 
 vector<char> readStylesXml(zip_t* zip) {
-    zip_stat_t stats;
+    zip_stat_t stats = {};
     if (zip_stat(zip, "word/styles.xml", 0, &stats) != 0) {
         throw runtime_error("styles.xml not found in DOCX archive");
     }
 
-    unique_ptr<zip_file_t, void(*)(zip_file_t*)> stylesFile(
+    unique_ptr<zip_file_t, zip_fclose_t> stylesFile(
         zip_fopen(zip, "word/styles.xml", 0),
-        zip_fclose
+        &zip_fclose
     );
 
     if (!stylesFile) {

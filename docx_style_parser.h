@@ -7,10 +7,10 @@
 #include <memory>
 
 // Forward declarations for libzip
-struct zip_t;
-struct zip_file_t;
-struct zip_stat_t;
-struct zip_error_t;
+typedef struct zip zip_t;
+typedef struct zip_file zip_file_t;
+typedef struct zip_stat zip_stat_t;
+typedef struct zip_error zip_error_t;
 
 // Forward declarations for libxml2
 struct _xmlDoc;
@@ -23,7 +23,8 @@ struct _xmlAttr;
 typedef _xmlAttr xmlAttr;
 
 // Function pointer types for deleters
-typedef void (*zip_deleter)(zip_t*);
+typedef int (*zip_close_t)(zip_t*);
+typedef int (*zip_fclose_t)(zip_file_t*);
 typedef void (*xmlDoc_deleter)(xmlDoc*);
 
 /**
@@ -45,7 +46,7 @@ namespace DocxParser {
  * @return Unique pointer to zip archive with custom deleter
  * @throws std::runtime_error if file cannot be opened
  */
-std::unique_ptr<zip_t, zip_deleter> openDocxFile(const std::string& filePath);
+std::unique_ptr<zip_t, zip_close_t> openDocxFile(const std::string& filePath);
 
 /**
  * @brief Reads styles.xml from an open DOCX zip archive
