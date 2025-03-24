@@ -8,6 +8,8 @@
 
 using namespace std;
 
+namespace DocxParser {
+
 // Zip file handling functions
 unique_ptr<zip_t, zip_close_t> openDocxFile(const string& filePath) {
     int zipError = 0;
@@ -134,11 +136,13 @@ StyleInfo processStyleNode(xmlNodePtr node) {
 }
 
 // Main interface
-vector<StyleInfo> extractDocxStyles(const string& filePath) {
-    auto zip = openDocxFile(filePath);
-    auto stylesXml = readStylesXml(zip.get());
-    auto doc = parseXml(stylesXml);
-    auto styleNodes = findStyleNodes(doc.get());
+} // namespace DocxParser
+
+vector<StyleInfo> DocxParser::extractDocxStyles(const string& filePath) {
+    auto zip = DocxParser::openDocxFile(filePath);
+    auto stylesXml = DocxParser::readStylesXml(zip.get());
+    auto doc = DocxParser::parseXml(stylesXml);
+    auto styleNodes = DocxParser::findStyleNodes(doc.get());
     
     vector<StyleInfo> styles;
     for (auto node : styleNodes) {
