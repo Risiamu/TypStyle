@@ -7,12 +7,10 @@ set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/.vcpkg-clion/vcpkg/scripts/buildsystems
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Find required libraries
-list(APPEND CMAKE_PREFIX_PATH 
-    "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-windows/share/libzip"
-    "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/share/libxml2"
-)
+# Set vcpkg to use static libraries
+set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
+# Find required libraries
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
 
@@ -24,15 +22,7 @@ target_link_libraries(TypStyle PRIVATE
     LibXml2::LibXml2
 )
 
-# Copy required DLLs to build directory
-add_custom_command(TARGET TypStyle POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-windows/bin/zip.dll"
-        $<TARGET_FILE_DIR:TypStyle>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/bin/libxml2.dll"
-        $<TARGET_FILE_DIR:TypStyle>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/zlib_x64-windows/bin/zlib1.dll"
-        $<TARGET_FILE_DIR:TypStyle>
-)
+# Set static runtime library
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
