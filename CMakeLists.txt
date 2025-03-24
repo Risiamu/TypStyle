@@ -30,9 +30,9 @@ add_custom_command(TARGET TypStyle POST_BUILD
         "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libzip_x64-mingw-dynamic/bin/libzip.dll"
         $<TARGET_FILE_DIR:TypStyle>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-mingw-dynamic/bin/libxml2.dll"
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/libxml2_x64-windows/bin/libxml2.dll"
         $<TARGET_FILE_DIR:TypStyle>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/zlib_x64-mingw-dynamic/bin/zlib.dll"
+        "C:/Users/kousa/.vcpkg-clion/vcpkg/packages/zlib_x64-mingw-dynamic/bin/libzlib1.dll"
         $<TARGET_FILE_DIR:TypStyle>
 )
