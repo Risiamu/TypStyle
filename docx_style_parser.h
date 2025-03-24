@@ -5,20 +5,26 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <zip.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
 
-// Forward declarations
+// Forward declarations for libzip
 struct zip_t;
 struct zip_file_t;
 struct zip_stat_t;
 struct zip_error_t;
-typedef struct _xmlDoc xmlDoc;
-typedef xmlDoc* xmlDocPtr;
-typedef struct _xmlNode xmlNode;
-typedef xmlNode* xmlNodePtr;
-typedef struct _xmlAttr xmlAttr;
+
+// Forward declarations for libxml2
+struct _xmlDoc;
+typedef _xmlDoc xmlDoc;
+typedef _xmlDoc* xmlDocPtr;
+struct _xmlNode;
+typedef _xmlNode xmlNode;
+typedef _xmlNode* xmlNodePtr;
+struct _xmlAttr;
+typedef _xmlAttr xmlAttr;
+
+// Function pointer types for deleters
+typedef void (*zip_deleter)(zip_t*);
+typedef void (*xmlDoc_deleter)(xmlDoc*);
 
 /**
  * @brief Contains information about a DOCX style
@@ -39,7 +45,7 @@ namespace DocxParser {
  * @return Unique pointer to zip archive with custom deleter
  * @throws std::runtime_error if file cannot be opened
  */
-std::unique_ptr<zip_t, void(*)(zip_t*)> openDocxFile(const std::string& filePath);
+std::unique_ptr<zip_t, zip_deleter> openDocxFile(const std::string& filePath);
 
 /**
  * @brief Reads styles.xml from an open DOCX zip archive
@@ -55,7 +61,7 @@ std::vector<char> readStylesXml(zip_t* zip);
  * @return Unique pointer to XML document with custom deleter
  * @throws std::runtime_error if XML parsing fails
  */
-std::unique_ptr<xmlDoc, void(*)(xmlDocPtr)> parseXml(const std::vector<char>& xmlData);
+std::unique_ptr<xmlDoc, xmlDoc_deleter> parseXml(const std::vector<char>& xmlData);
 
 /**
  * @brief Finds all style nodes in an XML document
