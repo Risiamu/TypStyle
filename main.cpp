@@ -24,13 +24,14 @@ int main() {
             std::cout << "No styles found in the document.\n";
         } else {
             std::cout << "Found " << styles.size() << " styles:\n";
-        for (const auto& style : styles) {
-            std::cout << "\nStyle: " << style.name 
-                      << " (Type: " << style.type << ")\n";
-            std::cout << "Properties:\n";
-            for (const auto& [key, value] : style.properties) {
-                std::cout << "  " << key << ": " 
-                          << (value.empty() ? "[no value]" : value) << "\n";
+            for (const auto& style : styles) {
+                std::cout << "\nStyle: " << style.name 
+                          << " (Type: " << style.type << ")\n";
+                std::cout << "Properties:\n";
+                for (const auto& [key, value] : style.properties) {
+                    std::cout << "  " << key << ": " 
+                              << (value.empty() ? "[no value]" : value) << "\n";
+                }
             }
         }
     } catch (const std::exception& e) {
