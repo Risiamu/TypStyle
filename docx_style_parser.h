@@ -17,30 +17,77 @@ typedef struct _xmlNode xmlNode;
 typedef xmlNode* xmlNodePtr;
 typedef struct _xmlAttr xmlAttr;
 
+/**
+ * @brief Contains information about a DOCX style
+ */
 struct StyleInfo {
-    std::string name;
-    std::string type;
-    std::map<std::string, std::string> properties;
-    std::string fontName;
-    std::string fontSize;
+    std::string name;        ///< Name of the style
+    std::string type;        ///< Type of style (paragraph/character/table/etc)
+    std::map<std::string, std::string> properties; ///< Style properties
+    std::string fontName;    ///< Primary font name used in this style
+    std::string fontSize;    ///< Font size in half-points (1/144 of an inch)
 };
 
 namespace DocxParser {
 
-// Zip file handling
+/**
+ * @brief Opens a DOCX file and returns a zip archive handle
+ * @param filePath Path to the DOCX file
+ * @return Unique pointer to zip archive with custom deleter
+ * @throws std::runtime_error if file cannot be opened
+ */
 std::unique_ptr<zip_t, void(*)(zip_t*)> openDocxFile(const std::string& filePath);
+
+/**
+ * @brief Reads styles.xml from an open DOCX zip archive
+ * @param zip Open zip archive handle
+ * @return Vector containing raw XML data
+ * @throws std::runtime_error if styles.xml cannot be read
+ */
 std::vector<char> readStylesXml(zip_t* zip);
 
-// XML parsing
+/**
+ * @brief Parses XML data into a document object
+ * @param xmlData Raw XML data to parse
+ * @return Unique pointer to XML document with custom deleter
+ * @throws std::runtime_error if XML parsing fails
+ */
 std::unique_ptr<xmlDoc, void(*)(xmlDocPtr)> parseXml(const std::vector<char>& xmlData);
+
+/**
+ * @brief Finds all style nodes in an XML document
+ * @param doc Parsed XML document
+ * @return Vector of pointers to style nodes
+ */
 std::vector<xmlNodePtr> findStyleNodes(xmlDocPtr doc);
 
-// Style processing
+/**
+ * @brief Processes a single style node into StyleInfo
+ * @param node XML node representing a style
+ * @return StyleInfo containing extracted style data
+ */
 StyleInfo processStyleNode(xmlNodePtr node);
+
+/**
+ * @brief Extracts font properties from run properties node
+ * @param rPrNode XML node containing run properties
+ * @param[out] style StyleInfo to populate with font data
+ */
 void extractFontProperties(xmlNodePtr rPrNode, StyleInfo& style);
+
+/**
+ * @brief Extracts other style properties from a node
+ * @param node XML node to process
+ * @param[out] style StyleInfo to populate with properties
+ */
 void extractOtherProperties(xmlNodePtr node, StyleInfo& style);
 
-// Main interface
+/**
+ * @brief Main interface - extracts all styles from a DOCX file
+ * @param filePath Path to the DOCX file
+ * @return Vector of StyleInfo objects for all styles found
+ * @throws std::runtime_error for any file/parsing errors
+ */
 std::vector<StyleInfo> extractDocxStyles(const std::string& filePath);
 
 } // namespace DocxParser
