@@ -31,6 +31,7 @@ set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 list(APPEND CMAKE_PREFIX_PATH 
     "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libxml2_x64-windows-static/share/libxml2"
     "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libzip_x64-windows-static/share/libzip"
+    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/zlib_x64-windows-static/share/zlib"
 )
 
 # Find and configure required dependencies
