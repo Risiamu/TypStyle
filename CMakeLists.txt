@@ -35,6 +35,7 @@ list(APPEND CMAKE_PREFIX_PATH
 )
 
 # Find and configure required dependencies
+find_package(ZLIB CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
 
@@ -49,6 +50,7 @@ add_executable(TypStyle
 target_link_libraries(TypStyle PRIVATE
     libzip::zip       # ZIP archive handling
     LibXml2::LibXml2   # XML parsing
+    ZLIB::ZLIB        # Compression library
 )
 
 # Configure static runtime for MSVC builds
