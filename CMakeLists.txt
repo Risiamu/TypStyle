@@ -33,6 +33,9 @@ list(APPEND CMAKE_PREFIX_PATH
     "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libzip_x64-windows-static/share/libzip"
     "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/zlib_x64-windows-static/share/zlib"
     "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/zlib_x64-windows-static"
+    "C:/Users/kousa/Documents/TypStyle/vcpkg/installed/x64-windows-static/lib"
+    "C:/Users/kousa/Documents/TypStyle/vcpkg/installed/x64-windows-static/share"
+    "C:/Users/kousa/Documents/TypStyle/vcpkg/installed/x64-windows-static/include"
 )
 
 # Find and configure required dependencies
