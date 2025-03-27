@@ -1,7 +1,7 @@
 # Minimum required CMake version
 cmake_minimum_required(VERSION 3.30)
-#set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/Documents/TypStyle/vcpkg/scripts/buildsystems/vcpkg.cmake"
-#        CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/Documents/TypStyle/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "Vcpkg toolchain file")
 # Project name and basic configuration
 project(TypStyle
     VERSION 1.0
@@ -23,16 +23,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Static linking configuration
-# This tells vcpkg to use static libraries instead of dynamic ones
-# To install required static libraries:
-#   vcpkg install libzip:x64-windows-static libxml2:x64-windows-static
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
-# Add vcpkg package paths to search locations
-#find_package(BZip2 REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
-link_libraries("-static")
 # Define the executable and its source files
 add_executable(TypStyle
     main.cpp
@@ -43,9 +37,11 @@ add_executable(TypStyle
 target_compile_options(TypStyle PRIVATE /MT)
 target_link_options(TypStyle PRIVATE /INCREMENTAL:NO /NODEFAULTLIB:MSVCRT)
 # Link dependencies to the executable
-target_link_libraries(TypStyle PRIVATE "-static"
-    libzip::zip       # ZIP archive handling
-    LibXml2::LibXml2  # XML parsing
+target_link_libraries(TypStyle PRIVATE
+    libzip::zip
+    LibXml2::LibXml2
+    bcrypt  # Required for libzip static linking
+    advapi32 # Required for XML security functions
 )
 
 # Configure static runtime for MSVC builds
