@@ -28,6 +28,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
 # Add vcpkg package paths to search locations
+find_package(BZip2 REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
 
