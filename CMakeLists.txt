@@ -1,6 +1,7 @@
 # Minimum required CMake version
 cmake_minimum_required(VERSION 3.30)
-
+#set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/Documents/TypStyle/vcpkg/scripts/buildsystems/vcpkg.cmake"
+#        CACHE STRING "Vcpkg toolchain file")
 # Project name and basic configuration
 project(TypStyle
     VERSION 1.0
@@ -13,9 +14,9 @@ project(TypStyle
 # To install vcpkg:
 #   git clone https://github.com/Microsoft/vcpkg.git
 #   .\vcpkg\bootstrap-vcpkg.bat
-set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/Documents/TypStyle/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "Vcpkg toolchain file")
-
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
+set(CMAKE_EXE_LINKER_FLAGS "-static")
+set(BUILD_SHARED_LIBS OFF)
 # C++ standard configuration
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,9 +30,9 @@ set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
 # Add vcpkg package paths to search locations
 #find_package(BZip2 REQUIRED)
-find_package(libxml2 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
-
+find_package(LibXml2 CONFIG REQUIRED)
+link_libraries("-static")
 # Define the executable and its source files
 add_executable(TypStyle
     main.cpp
@@ -39,17 +40,17 @@ add_executable(TypStyle
     docx_style_parser.h
 )
 
+target_compile_options(TypStyle PRIVATE /MT)
+target_link_options(TypStyle PRIVATE /INCREMENTAL:NO /NODEFAULTLIB:MSVCRT)
 # Link dependencies to the executable
-target_link_libraries(TypStyle PRIVATE
+target_link_libraries(TypStyle PRIVATE "-static"
     libzip::zip       # ZIP archive handling
-    libxml2::libxml2   # XML parsing
+    LibXml2::LibXml2  # XML parsing
 )
 
 # Configure static runtime for MSVC builds
 # This ensures no MSVC runtime DLLs are required
-#if(MSVC)
-#    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-#endif()
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # Optional: Install target configuration
-# install(TARGETS TypStyle DESTINATION bin)
+install(TARGETS TypStyle DESTINATION bin)
