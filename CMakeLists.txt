@@ -42,6 +42,7 @@ add_executable(TypStyle
 target_link_libraries(TypStyle PRIVATE
     libzip::zip       # ZIP archive handling
     LibXml2::LibXml2   # XML parsing
+    BZip2::BZip2      # Compression support
 )
 
 # Configure static runtime for MSVC builds
