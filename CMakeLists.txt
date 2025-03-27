@@ -29,7 +29,7 @@ set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
 # Add vcpkg package paths to search locations
 #find_package(BZip2 REQUIRED)
-find_package(LibXml2 CONFIG REQUIRED)
+find_package(libxml2 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 
 # Define the executable and its source files
@@ -42,7 +42,7 @@ add_executable(TypStyle
 # Link dependencies to the executable
 target_link_libraries(TypStyle PRIVATE
     libzip::zip       # ZIP archive handling
-    LibXml2::LibXml2   # XML parsing
+    libxml2::libxml2   # XML parsing
 )
 
 # Configure static runtime for MSVC builds
