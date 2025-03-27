@@ -27,6 +27,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #   vcpkg install libzip:x64-windows-static libxml2:x64-windows-static
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
+# Add vcpkg package paths to search locations
+list(APPEND CMAKE_PREFIX_PATH 
+    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libxml2_x64-windows-static/share/libxml2"
+    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libzip_x64-windows-static/share/libzip"
+)
+
 # Find and configure required dependencies
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
