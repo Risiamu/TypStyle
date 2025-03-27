@@ -13,7 +13,7 @@ project(TypStyle
 # To install vcpkg:
 #   git clone https://github.com/Microsoft/vcpkg.git
 #   .\vcpkg\bootstrap-vcpkg.bat
-set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/.vcpkg-clion/vcpkg/scripts/buildsystems/vcpkg.cmake"
+set(CMAKE_TOOLCHAIN_FILE "C:/Users/kousa/Documents/TypStyle/vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "Vcpkg toolchain file")
 
 # C++ standard configuration
@@ -28,18 +28,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg triplet")
 
 # Add vcpkg package paths to search locations
-list(APPEND CMAKE_PREFIX_PATH 
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libxml2_x64-windows-static/share/libxml2"
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/libzip_x64-windows-static/share/libzip"
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/zlib_x64-windows-static/share/zlib"
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/packages/zlib_x64-windows-static"
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/installed/x64-windows-static/lib"
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/installed/x64-windows-static/share"
-    "C:/Users/kousa/Documents/TypStyle/vcpkg/installed/x64-windows-static/include"
-)
-
-# Find and configure required dependencies
-find_package(ZLIB CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(LibXml2 CONFIG REQUIRED)
 
@@ -54,14 +42,13 @@ add_executable(TypStyle
 target_link_libraries(TypStyle PRIVATE
     libzip::zip       # ZIP archive handling
     LibXml2::LibXml2   # XML parsing
-    ZLIB::ZLIB        # Compression library
 )
 
 # Configure static runtime for MSVC builds
 # This ensures no MSVC runtime DLLs are required
-if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
+#if(MSVC)
+#    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+#endif()
 
 # Optional: Install target configuration
 # install(TARGETS TypStyle DESTINATION bin)
