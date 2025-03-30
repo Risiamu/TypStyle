@@ -225,6 +225,20 @@ void extractFontProperties(xmlNodePtr rPrNode, StyleInfo& style) {
  * - Any other style attributes
  * Properties are stored in the StyleInfo's properties map.
  */
+void extractStyleName(xmlNodePtr node, StyleInfo& style) {
+    // Look for w:name child element
+    for (xmlNodePtr child = node->children; child; child = child->next) {
+        if (child->type == XML_ELEMENT_NODE &&
+            xmlStrcmp(child->name, (const xmlChar*)"name") == 0) {
+            if (auto val = xmlGetProp(child, (const xmlChar*)"val")) {
+                style.name = reinterpret_cast<char*>(val);
+                xmlFree(val);
+            }
+            break; // Found name element, stop searching
+        }
+    }
+}
+
 void extractOtherProperties(xmlNodePtr node, StyleInfo& style) {
     for (xmlNodePtr prop = node->children; prop; prop = prop->next) {
         if (prop->type != XML_ELEMENT_NODE) continue;
@@ -256,17 +270,7 @@ void extractOtherProperties(xmlNodePtr node, StyleInfo& style) {
 StyleInfo processStyleNode(xmlNodePtr node) {
     StyleInfo style;
     
-    // Look for w:name child element
-    for (xmlNodePtr child = node->children; child; child = child->next) {
-        if (child->type == XML_ELEMENT_NODE &&
-            xmlStrcmp(child->name, (const xmlChar*)"name") == 0) {
-            if (auto val = xmlGetProp(child, (const xmlChar*)"val")) {
-                style.name = reinterpret_cast<char*>(val);
-                xmlFree(val);
-            }
-            break; // Found name element, stop searching
-        }
-    }
+    extractStyleName(node, style);
     
     if (auto type = xmlGetProp(node, (const xmlChar*)"type")) {
         style.type = reinterpret_cast<char*>(type);
