@@ -256,9 +256,16 @@ void extractOtherProperties(xmlNodePtr node, StyleInfo& style) {
 StyleInfo processStyleNode(xmlNodePtr node) {
     StyleInfo style;
     
-    if (auto name = xmlGetProp(node, (const xmlChar*)"name")) {
-        style.name = reinterpret_cast<char*>(name);
-        xmlFree(name);
+    // Look for w:name child element
+    for (xmlNodePtr child = node->children; child; child = child->next) {
+        if (child->type == XML_ELEMENT_NODE &&
+            xmlStrcmp(child->name, (const xmlChar*)"name") == 0) {
+            if (auto val = xmlGetProp(child, (const xmlChar*)"val")) {
+                style.name = reinterpret_cast<char*>(val);
+                xmlFree(val);
+            }
+            break; // Found name element, stop searching
+        }
     }
     
     if (auto type = xmlGetProp(node, (const xmlChar*)"type")) {
