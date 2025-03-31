@@ -1,5 +1,6 @@
 #include <iostream>
 #include "docx_style_parser.h"
+#include "spdlog/spdlog.h"
 
 int main() {
     try {
@@ -16,6 +17,7 @@ int main() {
             // that converts a C++ std::string into a C-style string
             // (a null-terminated character array, const char*).
             fclose(file);
+            spdlog::info("docx file exists, closing file now.");
             auto styles = DocxParser::extractDocxStyles(docxPath);
             
             if (styles.empty()) {
