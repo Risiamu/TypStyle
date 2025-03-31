@@ -1,27 +1,20 @@
 #include <iostream>
 #include "docx_style_parser.h"
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+
 int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
-    // <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
-
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code.
-        // We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/>
-        // breakpoint for you, but you can always add more by pressing
-        // <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
-    }
-
     try {
+        // TIP
         // Extract and display DOCX styles
         const std::string docxPath = "sample.docx";
         std::cout << "\nExtracting styles from " << docxPath << "...\n";
         
+        // TIP
         // Check if file exists first
         if (FILE* file = fopen(docxPath.c_str(), "r")) {
+            // TIP
+            // The c_str() function in C++ is a member function of the std::string class
+            // that converts a C++ std::string into a C-style string
+            // (a null-terminated character array, const char*).
             fclose(file);
             auto styles = DocxParser::extractDocxStyles(docxPath);
             
