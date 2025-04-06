@@ -153,16 +153,19 @@ namespace DocxParser {
             // and if its name is "style"
             if (node->type == XML_ELEMENT_NODE &&
                 xmlStrcmp(node->name, (const xmlChar *) "style") == 0) {
-                // Check if style has a qFormat element
+                // Check for required qFormat and exclude semiHidden
                 bool hasQFormat = false;
+                bool isHidden = false;
                 for (xmlNodePtr child = node->children; child; child = child->next) {
-                    if (child->type == XML_ELEMENT_NODE &&
-                        xmlStrcmp(child->name, (const xmlChar *) "qFormat") == 0) {
-                        hasQFormat = true;
-                        break;
+                    if (child->type == XML_ELEMENT_NODE) {
+                        if (xmlStrcmp(child->name, (const xmlChar *) "qFormat") == 0) {
+                            hasQFormat = true;
+                        } else if (xmlStrcmp(child->name, (const xmlChar *) "semiHidden") == 0) {
+                            isHidden = true;
+                        }
                     }
                 }
-                if (hasQFormat) {
+                if (hasQFormat && !isHidden) {
                     // Add node pointer to vector
                     styleNodes.push_back(node);
                 }
