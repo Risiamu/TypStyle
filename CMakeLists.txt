@@ -20,7 +20,9 @@ add_compile_options("/utf-8")
 find_package(libxml2 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
+# Main application
 add_executable(TypStyle
         main.cpp
         docx_style_parser.cpp
@@ -32,6 +34,22 @@ target_link_libraries(TypStyle PRIVATE
         libzip::zip
         spdlog::spdlog
 )
+
+# Test executable
+enable_testing()
+add_executable(TypStyleTests
+        docx_style_parser_test.cpp
+        docx_style_parser.cpp
+)
+
+target_link_libraries(TypStyleTests PRIVATE
+        LibXml2::LibXml2
+        libzip::zip
+        GTest::gtest
+        GTest::gmock_main
+)
+
+add_test(NAME TypStyleTests COMMAND TypStyleTests)
 
 if (MSVC)
     # Set consistent runtime library for all configurations
