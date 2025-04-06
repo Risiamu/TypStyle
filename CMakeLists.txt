@@ -20,7 +20,6 @@ add_compile_options("/utf-8")
 find_package(libxml2 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
 
 add_executable(TypStyle
         main.cpp
@@ -32,10 +31,14 @@ target_link_libraries(TypStyle PRIVATE
         LibXml2::LibXml2
         libzip::zip
         spdlog::spdlog
-        fmt::fmt
 )
 
 if (MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug$<$<CONFIG:Release>:Release>" CACHE STRING "")
+    # Set consistent runtime library for all configurations
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+    add_compile_options(
+        $<$<CONFIG:Debug>:/MTd>
+        $<$<CONFIG:Release>:/MT>
+    )
 endif()
 
