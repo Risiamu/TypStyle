@@ -153,8 +153,19 @@ namespace DocxParser {
             // and if its name is "style"
             if (node->type == XML_ELEMENT_NODE &&
                 xmlStrcmp(node->name, (const xmlChar *) "style") == 0) {
-                // Add node pointer to vector
-                styleNodes.push_back(node);
+                // Check if style has a qFormat element
+                bool hasQFormat = false;
+                for (xmlNodePtr child = node->children; child; child = child->next) {
+                    if (child->type == XML_ELEMENT_NODE &&
+                        xmlStrcmp(child->name, (const xmlChar *) "qFormat") == 0) {
+                        hasQFormat = true;
+                        break;
+                    }
+                }
+                if (hasQFormat) {
+                    // Add node pointer to vector
+                    styleNodes.push_back(node);
+                }
             }
         }
         return styleNodes;
