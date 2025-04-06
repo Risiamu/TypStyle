@@ -246,10 +246,18 @@ namespace DocxParser {
             if (propName == "rPr") {
                 extractFontProperties(prop, style);
             } else {
-                xmlChar *content = xmlNodeGetContent(prop);
-                if (content) {
-                    style.properties[propName] = reinterpret_cast<char *>(content);
-                    xmlFree(content);
+                // First check for val attribute
+                xmlChar *val = xmlGetProp(prop, (const xmlChar *)"val");
+                if (val) {
+                    style.properties[propName] = reinterpret_cast<char *>(val);
+                    xmlFree(val);
+                } else {
+                    // Fall back to node content if no val attribute
+                    xmlChar *content = xmlNodeGetContent(prop);
+                    if (content) {
+                        style.properties[propName] = reinterpret_cast<char *>(content);
+                        xmlFree(content);
+                    }
                 }
             }
         }
