@@ -8,11 +8,35 @@
 
 using namespace std;
 
+/*
+ * DOCX Style Parser - Beginner's Guide
+ * 
+ * This program helps extract styling information from Microsoft Word (.docx) files.
+ * DOCX files are actually ZIP archives containing XML files with styling data.
+ * 
+ * Key Concepts:
+ * 1. ZIP Handling: Uses libzip to read the compressed archive
+ * 2. XML Parsing: Uses libxml2 to process the XML data
+ * 3. Memory Management: Uses smart pointers (unique_ptr) for automatic cleanup
+ * 4. Error Handling: Uses exceptions (try/catch) for error reporting
+ * 
+ * Code Structure:
+ * - Namespace DocxParser contains all main functionality
+ * - Functions are organized in processing pipeline order
+ * - StyleInfo struct stores extracted style properties
+ * 
+ * Learning Resources:
+ * - C++ Basics: https://www.learncpp.com/
+ * - libxml2 Docs: https://gnome.pages.gitlab.gnome.org/libxml2/devhelp/
+ * - libzip Docs: https://libzip.org/documentation/
+ * - Smart Pointers: https://en.cppreference.com/w/cpp/memory/unique_ptr
+ */
+
 namespace DocxParser {
 
 /**
  * @brief Opens a DOCX file (which is a ZIP archive) and returns a handle
- * @param filePath Path to the DOCX file to open
+ * @param filePath Path to the DOCX file to open (const reference)
  * @return unique_ptr managing the zip archive handle with custom deleter
  * @throws runtime_error if the file cannot be opened
  * 
@@ -21,6 +45,12 @@ namespace DocxParser {
  * 1. Attempts to open the file using libzip
  * 2. Wraps the raw zip handle in a unique_ptr with custom deleter
  * 3. Provides basic error handling if opening fails
+ * 
+ * Beginner Notes:
+ * - const string &filePath: Reference to avoid copy, const for safety
+ * - unique_ptr: Smart pointer that auto-deletes resources
+ * - zip_t: C library type representing ZIP archive
+ * - zip_open: C function that returns a pointer to zip archive
  */
     unique_ptr <zip_t, zip_close_t> openDocxFile(const string &filePath) {
         // In C++, we use raw pointers (zip_t*) to interface with C libraries
@@ -186,6 +216,19 @@ namespace DocxParser {
  * - Font size (sz)
  * Any found properties are stored in the StyleInfo struct.
  */
+    /**
+     * @brief Extracts font properties from XML node
+     * @param rPrNode XML node pointer (xmlNodePtr)
+     * @param style Reference to StyleInfo to modify
+     * 
+     * Beginner Notes:
+     * - xmlNodePtr is a pointer to libxml2's node structure
+     * - &style means we modify the original object (not a copy)
+     * - The function walks through XML child nodes using:
+     *   - node->children: Start of child nodes list
+     *   - node->next: Move to next sibling node
+     *   - node->type: Check if node is an element (XML_ELEMENT_NODE)
+     */
     void extractFontProperties(xmlNodePtr rPrNode, StyleInfo &style) {
         // Iterate through all child nodes of rPrNode
         for (xmlNodePtr child = rPrNode->children; child; child = child->next) {
