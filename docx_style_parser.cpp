@@ -259,17 +259,49 @@ namespace DocxParser {
             string propName(reinterpret_cast<const char *>(prop->name));
             if (propName == "rPr") {
                 extractFontProperties(prop, style);
+                // Process all rPr children as properties
+                for (xmlNodePtr child = prop->children; child; child = child->next) {
+                    if (child->type != XML_ELEMENT_NODE) continue;
+                    string childName(reinterpret_cast<const char *>(child->name));
+                    xmlChar* val = xmlGetProp(child, (const xmlChar*)"val");
+                    if (val) {
+                        style.properties[childName] = reinterpret_cast<char*>(val);
+                        xmlFree(val);
+                    } else {
+                        xmlChar* content = xmlNodeGetContent(child);
+                        if (content) {
+                            style.properties[childName] = reinterpret_cast<char*>(content);
+                            xmlFree(content);
+                        }
+                    }
+                }
+            } else if (propName == "pPr") {
+                // Process all pPr children as properties
+                for (xmlNodePtr child = prop->children; child; child = child->next) {
+                    if (child->type != XML_ELEMENT_NODE) continue;
+                    string childName(reinterpret_cast<const char *>(child->name));
+                    xmlChar* val = xmlGetProp(child, (const xmlChar*)"val");
+                    if (val) {
+                        style.properties[childName] = reinterpret_cast<char*>(val);
+                        xmlFree(val);
+                    } else {
+                        xmlChar* content = xmlNodeGetContent(child);
+                        if (content) {
+                            style.properties[childName] = reinterpret_cast<char*>(content);
+                            xmlFree(content);
+                        }
+                    }
+                }
             } else {
-                // First check for val attribute
-                xmlChar *val = xmlGetProp(prop, (const xmlChar *)"val");
+                // Handle other properties normally
+                xmlChar* val = xmlGetProp(prop, (const xmlChar*)"val");
                 if (val) {
-                    style.properties[propName] = reinterpret_cast<char *>(val);
+                    style.properties[propName] = reinterpret_cast<char*>(val);
                     xmlFree(val);
                 } else {
-                    // Fall back to node content if no val attribute
-                    xmlChar *content = xmlNodeGetContent(prop);
+                    xmlChar* content = xmlNodeGetContent(prop);
                     if (content) {
-                        style.properties[propName] = reinterpret_cast<char *>(content);
+                        style.properties[propName] = reinterpret_cast<char*>(content);
                         xmlFree(content);
                     }
                 }
