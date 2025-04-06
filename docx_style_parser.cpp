@@ -252,6 +252,30 @@ namespace DocxParser {
         }
     }
 
+    /**
+     * @brief Processes XML node properties into StyleInfo
+     * @param node XML node to process
+     * @param style StyleInfo to populate with properties
+     * 
+     * @details Handles both attribute-based values (val) and node content
+     */
+    void processXmlProperties(xmlNodePtr node, StyleInfo& style) {
+        if (node->type != XML_ELEMENT_NODE) return;
+        
+        string propName(reinterpret_cast<const char*>(node->name));
+        xmlChar* val = xmlGetProp(node, (const xmlChar*)"val");
+        if (val) {
+            style.properties[propName] = reinterpret_cast<char*>(val);
+            xmlFree(val);
+        } else {
+            xmlChar* content = xmlNodeGetContent(node);
+            if (content) {
+                style.properties[propName] = reinterpret_cast<char*>(content);
+                xmlFree(content);
+            }
+        }
+    }
+
     void extractOtherProperties(xmlNodePtr node, StyleInfo &style) {
         for (xmlNodePtr prop = node->children; prop; prop = prop->next) {
             if (prop->type != XML_ELEMENT_NODE) continue;
@@ -261,50 +285,16 @@ namespace DocxParser {
                 extractFontProperties(prop, style);
                 // Process all rPr children as properties
                 for (xmlNodePtr child = prop->children; child; child = child->next) {
-                    if (child->type != XML_ELEMENT_NODE) continue;
-                    string childName(reinterpret_cast<const char *>(child->name));
-                    xmlChar* val = xmlGetProp(child, (const xmlChar*)"val");
-                    if (val) {
-                        style.properties[childName] = reinterpret_cast<char*>(val);
-                        xmlFree(val);
-                    } else {
-                        xmlChar* content = xmlNodeGetContent(child);
-                        if (content) {
-                            style.properties[childName] = reinterpret_cast<char*>(content);
-                            xmlFree(content);
-                        }
-                    }
+                    processXmlProperties(child, style);
                 }
             } else if (propName == "pPr") {
                 // Process all pPr children as properties
                 for (xmlNodePtr child = prop->children; child; child = child->next) {
-                    if (child->type != XML_ELEMENT_NODE) continue;
-                    string childName(reinterpret_cast<const char *>(child->name));
-                    xmlChar* val = xmlGetProp(child, (const xmlChar*)"val");
-                    if (val) {
-                        style.properties[childName] = reinterpret_cast<char*>(val);
-                        xmlFree(val);
-                    } else {
-                        xmlChar* content = xmlNodeGetContent(child);
-                        if (content) {
-                            style.properties[childName] = reinterpret_cast<char*>(content);
-                            xmlFree(content);
-                        }
-                    }
+                    processXmlProperties(child, style);
                 }
             } else {
-                // Handle other properties normally
-                xmlChar* val = xmlGetProp(prop, (const xmlChar*)"val");
-                if (val) {
-                    style.properties[propName] = reinterpret_cast<char*>(val);
-                    xmlFree(val);
-                } else {
-                    xmlChar* content = xmlNodeGetContent(prop);
-                    if (content) {
-                        style.properties[propName] = reinterpret_cast<char*>(content);
-                        xmlFree(content);
-                    }
-                }
+                // Handle properties directly
+                processXmlProperties(prop, style);
             }
         }
     }
