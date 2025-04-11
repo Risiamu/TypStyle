@@ -72,38 +72,53 @@ namespace DocxParser {
      * 3. Error Handling:
      *    - Throws exceptions on failure (RAII ensures no leaks)
      */
+    /**
+     * @brief Opens a DOCX file and returns a managed zip archive handle
+     * 
+     * Syntax Breakdown:
+     * 
+     * 1. Return Type:
+     *    std::unique_ptr<zip_t, zip_close_t>
+     *    - unique_ptr: Smart pointer for automatic memory management
+     *    - zip_t*: Raw pointer type being managed
+     *    - zip_close_t: Type of custom deleter function
+     * 
+     * 2. Parameters:
+     *    const string &filePath
+     *    - const: Promises not to modify the string
+     *    - string &: Reference to avoid copying
+     * 
+     * 3. Function Body:
+     *    - Uses libzip's zip_open() C function
+     *    - Converts C++ string to C-style with c_str()
+     *    - Checks for errors and throws exceptions
+     *    - Returns smart pointer with custom deleter
+     */
     unique_ptr<zip_t, zip_close_t> openDocxFile(const string &filePath) {
-        // zipError will store libzip error code (0 means no error)
+        // Error code storage (0 means success)
         int zipError = 0;  
 
-        // Convert C++ string to C-style string and attempt to open ZIP archive
-        // zip_open() is a C function from libzip that returns:
-        // - Pointer to zip archive on success
-        // - NULL on failure (with error code in zipError)
+        // Convert C++ string to C-style and open archive
+        // zip_open() parameters:
+        // 1. path: C-style string path
+        // 2. flags: 0 for default options
+        // 3. error: Pointer to store error code
         zip_t *zip = zip_open(filePath.c_str(), 0, &zipError);
 
         if (!zip) {
-            // Build error message string
+            // Build detailed error message
             string errorMsg = "Failed to open DOCX file: ";
+            errorMsg += (zipError != 0) 
+                ? "Error code: " + to_string(zipError)
+                : "Unknown error";
             
-            // Check if we got a specific error code
-            if (zipError != 0) {
-                // to_string() converts numeric error code to string
-                errorMsg += "Error code: " + to_string(zipError);  
-            } else {
-                errorMsg += "Unknown error";
-            }
-            
-            // Throw exception - this will propagate up to caller
             throw runtime_error(errorMsg);  
         }
 
-        // Create and return a unique_ptr (smart pointer) that:
-        // 1. Owns the zip_t pointer
-        // 2. Will automatically call zip_close() when it goes out of scope
-        // The template parameters are:
-        // - zip_t*: The pointer type being managed
-        // - zip_close_t: The deleter function type (matches zip_close signature)
+        // Create smart pointer with custom deleter
+        // unique_ptr constructor parameters:
+        // 1. Raw pointer to manage
+        // 2. Deleter function (zip_close in this case)
         return unique_ptr<zip_t, zip_close_t>(zip, &zip_close);
     }
 
