@@ -36,8 +36,52 @@ struct StyleInfo {
     std::map<std::string, std::string> properties; ///< Style properties
     std::string fontName;    ///< Primary font name used in this style
     std::string fontSize;    ///< Font size in half-points (1/144 of an inch)
+
+    // Default constructor - initialize all members
+    StyleInfo() : name(""), type(""), fontName(""), fontSize(""), properties() {}
+    
+    // Prevent accidental copying
+    StyleInfo(const StyleInfo&) = delete;
+    StyleInfo& operator=(const StyleInfo&) = delete;
+    
+    // Allow moving
+    StyleInfo(StyleInfo&&) = default;
+    StyleInfo& operator=(StyleInfo&&) = default;
 };
 
+/**
+ * @brief Namespace for DOCX style parsing functionality
+ * 
+ * Namespaces in C++:
+ * 
+ * 1. Purpose:
+ *    - Prevent naming collisions between different code bases
+ *    - Organize related functionality into logical groups
+ *    - Provide a way to encapsulate library code
+ * 
+ * 2. Key Characteristics:
+ *    - Scoped container for identifiers (functions, classes, variables)
+ *    - Can be nested (namespaces within namespaces)
+ *    - Can be extended across multiple files
+ *    - Help avoid global namespace pollution
+ * 
+ * 3. Usage Patterns:
+ *    - Access elements with scope operator (::)
+ *      e.g. DocxParser::extractDocxStyles()
+ *    - 'using namespace' brings all names into current scope
+ *    - 'using' declaration brings specific names into scope
+ * 
+ * 4. Best Practices:
+ *    - Use namespaces for library code
+ *    - Avoid 'using namespace' in headers (can cause collisions)
+ *    - Prefer fully qualified names in header files
+ *    - Keep namespace names short but meaningful
+ * 
+ * 5. Common Namespaces:
+ *    - std: Standard Library namespace
+ *    - boost: Boost libraries namespace
+ *    - Project-specific namespaces (like DocxParser here)
+ */
 namespace DocxParser {
 
 /**
@@ -46,7 +90,7 @@ namespace DocxParser {
  * @return Unique pointer to zip archive with custom deleter
  * @throws std::runtime_error if file cannot be opened
  */
-std::unique_ptr<zip_t, zip_close_t> openDocxFile(const std::string& filePath);
+std::unique_ptr<zip_t, zip_close_t> openDocxFile(const std::string& filePath) noexcept(false);  // throws std::runtime_error
 
 /**
  * @brief Reads styles.xml from an open DOCX zip archive
@@ -54,7 +98,7 @@ std::unique_ptr<zip_t, zip_close_t> openDocxFile(const std::string& filePath);
  * @return Vector containing raw XML data
  * @throws std::runtime_error if styles.xml cannot be read
  */
-std::vector<char> readStylesXml(zip_t* zip);
+std::vector<char> readStylesXml(zip_t* zip) noexcept(false);  // throws std::runtime_error
 
 /**
  * @brief Parses XML data into a document object
@@ -62,7 +106,7 @@ std::vector<char> readStylesXml(zip_t* zip);
  * @return Unique pointer to XML document with custom deleter
  * @throws std::runtime_error if XML parsing fails
  */
-std::unique_ptr<xmlDoc, xmlDoc_deleter> parseXml(const std::vector<char>& xmlData);
+std::unique_ptr<xmlDoc, xmlDoc_deleter> parseXml(const std::vector<char>& xmlData) noexcept(false);  // throws std::runtime_error
 
 /**
  * @brief Finds all style nodes in an XML document

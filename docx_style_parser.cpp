@@ -1,11 +1,18 @@
-#include "docx_style_parser.h"
-#include <iostream>
-#include <stdexcept>
-#include <zip.h>
-#include <zipconf.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+// Standard C++ headers
+#include <iostream>   // For console I/O (cout, cerr)
+#include <stdexcept>  // For standard exceptions (runtime_error)
 
+// Third-party library headers
+#include <zip.h>      // For ZIP archive handling (libzip)
+#include <zipconf.h>  // ZIP configuration constants
+#include <libxml/parser.h>  // For XML parsing (libxml2)
+#include <libxml/tree.h>    // For XML DOM tree handling
+
+// Project header
+#include "docx_style_parser.h"  // Our own header with declarations
+
+// Using the standard namespace to avoid prefixing std::
+// Note: In header files, it's better to explicitly use std:: to avoid namespace pollution
 using namespace std;
 
 /*
@@ -52,28 +59,51 @@ namespace DocxParser {
  * - zip_t: C library type representing ZIP archive
  * - zip_open: C function that returns a pointer to zip archive
  */
-    unique_ptr <zip_t, zip_close_t> openDocxFile(const string &filePath) {
-        // In C++, we use raw pointers (zip_t*) to interface with C libraries
-        int zipError = 0;  // Will store error code if opening fails
+    /**
+     * @brief Demonstrates RAII pattern with custom deleter
+     * 
+     * Common Patterns Used:
+     * 1. RAII (Resource Acquisition Is Initialization):
+     *    - Resources (file handles) are acquired in constructor
+     *    - Released automatically when object goes out of scope
+     * 2. Smart Pointers:
+     *    - unique_ptr ensures single ownership
+     *    - Custom deleter (zip_close) handles proper cleanup
+     * 3. Error Handling:
+     *    - Throws exceptions on failure (RAII ensures no leaks)
+     */
+    unique_ptr<zip_t, zip_close_t> openDocxFile(const string &filePath) {
+        // zipError will store libzip error code (0 means no error)
+        int zipError = 0;  
 
-        // zip_open is a C function that returns a pointer to a zip archive
-        // filePath.c_str() converts C++ string to C-style null-terminated string
+        // Convert C++ string to C-style string and attempt to open ZIP archive
+        // zip_open() is a C function from libzip that returns:
+        // - Pointer to zip archive on success
+        // - NULL on failure (with error code in zipError)
         zip_t *zip = zip_open(filePath.c_str(), 0, &zipError);
 
         if (!zip) {
-            // Error handling - unlike Python, we need to manually build error messages
+            // Build error message string
             string errorMsg = "Failed to open DOCX file: ";
+            
+            // Check if we got a specific error code
             if (zipError != 0) {
-                errorMsg += "Error code: " + to_string(zipError);  // Convert number to string
+                // to_string() converts numeric error code to string
+                errorMsg += "Error code: " + to_string(zipError);  
             } else {
                 errorMsg += "Unknown error";
             }
-            throw runtime_error(errorMsg);  // Throw exception like Python's raise
+            
+            // Throw exception - this will propagate up to caller
+            throw runtime_error(errorMsg);  
         }
 
-        // unique_ptr is a smart pointer that automatically deletes the resource
-        // when it goes out of scope. We provide a custom deleter (&zip_close)
-        // because zip_t needs special cleanup
+        // Create and return a unique_ptr (smart pointer) that:
+        // 1. Owns the zip_t pointer
+        // 2. Will automatically call zip_close() when it goes out of scope
+        // The template parameters are:
+        // - zip_t*: The pointer type being managed
+        // - zip_close_t: The deleter function type (matches zip_close signature)
         return unique_ptr<zip_t, zip_close_t>(zip, &zip_close);
     }
 
@@ -89,42 +119,56 @@ namespace DocxParser {
  * 2. Opens and reads the file contents into memory
  * 3. Returns the raw XML data for parsing
  */
+    // Reads styles.xml from an open ZIP archive into a vector<char>
+    /**
+     * @brief Shows buffer management pattern
+     * 
+     * Common Patterns Used:
+     * 1. Buffer Management:
+     *    - Pre-allocates vector to exact needed size
+     *    - Uses data() for raw buffer access
+     * 2. RAII Wrappers:
+     *    - unique_ptr manages C file handle
+     * 3. Error Propagation:
+     *    - Throws exceptions up the call stack
+     */
     vector<char> readStylesXml(zip_t *zip) {
-        // zip_stat_t is a C struct that will hold file information
-        // The = {} syntax initializes all fields to zero (unlike Python where
-        // variables are automatically initialized)
+        // Initialize zip_stat_t struct to zero (C-style initialization)
+        // This will hold file metadata like size
         zip_stat_t stats = {};
 
-        // Check if styles.xml exists in the zip archive
+        // Check if styles.xml exists in the archive
+        // zip_stat() returns 0 on success, non-zero on failure
         if (zip_stat(zip, "word/styles.xml", 0, &stats) != 0) {
             throw runtime_error("styles.xml not found in DOCX archive");
         }
 
-        // Open the file inside the zip archive
-        // We use unique_ptr with custom deleter to ensure the file gets closed
+        // Open the file inside the ZIP archive
+        // We use unique_ptr with custom deleter to ensure proper cleanup
         unique_ptr<zip_file_t, zip_fclose_t> stylesFile(
-                zip_fopen(zip, "word/styles.xml", 0),  // C function call
-                &zip_fclose  // Custom deleter function
+            zip_fopen(zip, "word/styles.xml", 0),  // Open file
+            &zip_fclose  // Function to call when unique_ptr is destroyed
         );
 
-        if (!stylesFile) {  // Check if opening succeeded
+        if (!stylesFile) {  // Check if file opened successfully
             throw runtime_error("Failed to open styles.xml in archive");
         }
 
-        // Create a vector (similar to Python list) with enough space for the file
-        // Unlike Python lists, C++ vectors need their size specified upfront
+        // Create a vector with exact size needed for file contents
+        // vector<char> is like a dynamic array that manages its own memory
         vector<char> buffer(stats.size);
 
-        // Read file content into buffer
-        // get() gets the raw pointer from unique_ptr
-        // data() gets pointer to vector's underlying array
-        // static_cast converts between numeric types explicitly
+        // Read file contents into vector
+        // stylesFile.get() - gets raw pointer from unique_ptr
+        // buffer.data() - gets pointer to vector's internal array
+        // static_cast converts size_t to zip_int64_t explicitly
         if (zip_fread(stylesFile.get(), buffer.data(), buffer.size()) !=
             static_cast<zip_int64_t>(buffer.size())) {
             throw runtime_error("Failed to read styles.xml content");
         }
 
-        return buffer;  // Return by value (C++ handles this efficiently)
+        // Return vector by value - C++ will use move semantics (no copy)
+        return buffer;
     }
 
 // XML parsing functions
@@ -138,6 +182,18 @@ namespace DocxParser {
  * Uses libxml2 to parse the XML content from memory. The returned
  * document object can be traversed using libxml2's DOM API.
  */
+    /**
+     * @brief Demonstrates C library integration pattern
+     * 
+     * Common Patterns Used:
+     * 1. C Library Integration:
+     *    - Wraps C-style pointers in smart pointers
+     *    - Uses function pointer as custom deleter
+     * 2. Memory Safety:
+     *    - Ensures xmlFreeDoc is always called
+     * 3. Error Checking:
+     *    - Validates parser output
+     */
     unique_ptr<xmlDoc, void (*)(xmlDocPtr)> parseXml(const vector<char> &xmlData) {
         // xmlReadMemory parses XML from a memory buffer (not from file)
         // Parameters:
@@ -166,6 +222,18 @@ namespace DocxParser {
  * Searches the XML document for all <w:style> elements which
  * represent individual style definitions in the DOCX file.
  */
+    /**
+     * @brief Shows XML DOM traversal pattern
+     * 
+     * Common Patterns Used:
+     * 1. Tree Traversal:
+     *    - Iterates through child/sibling pointers
+     *    - Uses depth-first search
+     * 2. Filter Pattern:
+     *    - Collects nodes matching criteria
+     * 3. C String Handling:
+     *    - Uses xmlStrcmp for XML string comparison
+     */
     vector <xmlNodePtr> findStyleNodes(xmlDocPtr doc) {
         // Create empty vector to store node pointers
         vector<xmlNodePtr> styleNodes;
@@ -228,6 +296,17 @@ namespace DocxParser {
      *   - node->children: Start of child nodes list
      *   - node->next: Move to next sibling node
      *   - node->type: Check if node is an element (XML_ELEMENT_NODE)
+     */
+    /**
+     * @brief Demonstrates property extraction pattern
+     * 
+     * Common Patterns Used:
+     * 1. Visitor Pattern:
+     *    - Visits each node to extract properties
+     * 2. Out Parameter:
+     *    - Modifies style object passed by reference
+     * 3. String Conversion:
+     *    - Converts XML strings to C++ strings
      */
     void extractFontProperties(xmlNodePtr rPrNode, StyleInfo &style) {
         // Iterate through all child nodes of rPrNode
@@ -387,6 +466,18 @@ namespace DocxParser {
  * 3. Parsing the XML
  * 4. Extracting all style definitions
  * 5. Returning the collected style information
+ */
+/**
+ * @brief Shows pipeline processing pattern
+ * 
+ * Common Patterns Used:
+ * 1. Pipeline Pattern:
+ *    - Each step transforms output for next step
+ *    - Steps: Open -> Read -> Parse -> Process
+ * 2. Resource Management:
+ *    - All resources automatically cleaned up
+ * 3. Collection Processing:
+ *    - Transforms XML nodes into StyleInfo objects
  */
 vector<StyleInfo> DocxParser::extractDocxStyles(const string &filePath) {
     auto zip = DocxParser::openDocxFile(filePath);
