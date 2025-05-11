@@ -17,21 +17,21 @@ using namespace std;
 
 /*
  * DOCX Style Parser - Beginner's Guide
- * 
+ *
  * This program helps extract styling information from Microsoft Word (.docx) files.
  * DOCX files are actually ZIP archives containing XML files with styling data.
- * 
+ *
  * Key Concepts:
  * 1. ZIP Handling: Uses libzip to read the compressed archive
  * 2. XML Parsing: Uses libxml2 to process the XML data
  * 3. Memory Management: Uses smart pointers (unique_ptr) for automatic cleanup
  * 4. Error Handling: Uses exceptions (try/catch) for error reporting
- * 
+ *
  * Code Structure:
  * - Namespace DocxParser contains all main functionality
  * - Functions are organized in processing pipeline order
  * - StyleInfo struct stores extracted style properties
- * 
+ *
  * Learning Resources:
  * - C++ Basics: https://www.learncpp.com/
  * - libxml2 Docs: https://gnome.pages.gitlab.gnome.org/libxml2/devhelp/
@@ -46,13 +46,13 @@ namespace DocxParser {
  * @param filePath Path to the DOCX file to open (const reference)
  * @return unique_ptr managing the zip archive handle with custom deleter
  * @throws runtime_error if the file cannot be opened
- * 
+ *
  * @details
  * DOCX files are ZIP archives containing XML files. This function:
  * 1. Attempts to open the file using libzip
  * 2. Wraps the raw zip handle in a unique_ptr with custom deleter
  * 3. Provides basic error handling if opening fails
- * 
+ *
  * Beginner Notes:
  * - const string &filePath: Reference to avoid copy, const for safety
  * - unique_ptr: Smart pointer that auto-deletes resources
@@ -127,7 +127,7 @@ namespace DocxParser {
  * @param zip Open zip archive handle
  * @return Vector containing the raw XML data
  * @throws runtime_error if styles.xml cannot be found/read
- * 
+ *
  * @details
  * DOCX stores styles in word/styles.xml. This function:
  * 1. Checks for existence of styles.xml in the archive
@@ -192,7 +192,7 @@ namespace DocxParser {
  * @param xmlData Raw XML data to parse
  * @return unique_ptr managing the xmlDoc with custom deleter
  * @throws runtime_error if parsing fails
- * 
+ *
  * @details
  * Uses libxml2 to parse the XML content from memory. The returned
  * document object can be traversed using libxml2's DOM API.
@@ -232,7 +232,7 @@ namespace DocxParser {
  * @brief Finds all style nodes in the parsed XML document
  * @param doc Parsed XML document
  * @return Vector of pointers to style nodes
- * 
+ *
  * @details
  * Searches the XML document for all <w:style> elements which
  * represent individual style definitions in the DOCX file.
@@ -292,7 +292,7 @@ namespace DocxParser {
  * @brief Extracts font-related properties from a run properties node
  * @param rPrNode XML node containing run properties (rPr)
  * @param[out] style StyleInfo struct to populate with font data
- * 
+ *
  * @details
  * Processes the rPr node to extract:
  * - Font names (ascii, hAnsi, eastAsia)
@@ -303,7 +303,7 @@ namespace DocxParser {
      * @brief Extracts font properties from XML node
      * @param rPrNode XML node pointer (xmlNodePtr)
      * @param style Reference to StyleInfo to modify
-     * 
+     *
      * Beginner Notes:
      * - xmlNodePtr is a pointer to libxml2's node structure
      * - &style means we modify the original object (not a copy)
@@ -367,7 +367,7 @@ namespace DocxParser {
  * @brief Extracts non-font style properties from a style node
  * @param node XML style node to process
  * @param[out] style StyleInfo struct to populate with properties
- * 
+ *
  * @details
  * Processes the style node to extract all properties including:
  * - Style type
@@ -393,12 +393,12 @@ namespace DocxParser {
      * @brief Processes XML node properties into StyleInfo
      * @param node XML node to process
      * @param style StyleInfo to populate with properties
-     * 
+     *
      * @details Handles both attribute-based values (val) and node content
      */
     void processXmlProperties(xmlNodePtr node, StyleInfo& style) {
         if (node->type != XML_ELEMENT_NODE) return;
-        
+
         string propName(reinterpret_cast<const char*>(node->name));
         xmlChar* val = xmlGetProp(node, (const xmlChar*)"val");
         if (val) {
@@ -440,7 +440,7 @@ namespace DocxParser {
  * @brief Processes a single style node into a StyleInfo struct
  * @param node XML node representing a style definition
  * @return StyleInfo containing all extracted style data
- * 
+ *
  * @details
  * This is the main style processing function that:
  * 1. Extracts basic style attributes (name, type)
@@ -473,7 +473,7 @@ namespace DocxParser {
  * @param filePath Path to the DOCX file to process
  * @return Vector of StyleInfo objects for all styles found
  * @throws runtime_error for any file/parsing errors
- * 
+ *
  * @details
  * This is the primary public interface that coordinates:
  * 1. Opening the DOCX zip archive

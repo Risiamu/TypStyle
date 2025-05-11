@@ -8,7 +8,7 @@ int main() {
         // Extract and display DOCX styles
         const std::string docxPath = "sample.docx";
         std::cout << "\nExtracting styles from " << docxPath << "...\n";
-        
+
         // TIP
         // Check if file exists first
         if (FILE* file = fopen(docxPath.c_str(), "r")) {
@@ -19,13 +19,13 @@ int main() {
             fclose(file);
             spdlog::info("docx file exists, closing file now.");
             auto styles = DocxParser::extractDocxStyles(docxPath);
-            
+
             if (styles.empty()) {
                 std::cout << "No styles found in the document.\n";
             } else {
                 std::cout << "Found " << styles.size() << " styles:\n";
                 for (const auto& style : styles) {
-                    std::cout << "\nStyle: " << style.name 
+                    std::cout << "\nStyle: " << style.name
                               << " (Type: " << style.type << ")\n";
                     std::cout << "Properties:\n";
                     if (!style.fontName.empty()) {
@@ -35,7 +35,7 @@ int main() {
                         std::cout << "  Font Size: " << style.fontSize << "\n";
                     }
                     for (const auto& prop : style.properties) {
-                        std::cout << "  " << prop.first << ": " 
+                        std::cout << "  " << prop.first << ": "
                              << (prop.second.empty() ? "[no value]" : prop.second) << "\n";
                     }
                 }

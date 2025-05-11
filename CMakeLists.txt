@@ -59,4 +59,3 @@ if (MSVC)
         $<$<CONFIG:Release>:/MT>
     )
 endif()
-
