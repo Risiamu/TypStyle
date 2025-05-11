@@ -61,7 +61,7 @@ namespace DocxParser {
  */
     /**
      * @brief Demonstrates RAII pattern with custom deleter
-     * 
+     *
      * Common Patterns Used:
      * 1. RAII (Resource Acquisition Is Initialization):
      *    - Resources (file handles) are acquired in constructor
@@ -74,20 +74,20 @@ namespace DocxParser {
      */
     /**
      * @brief Opens a DOCX file and returns a managed zip archive handle
-     * 
+     *
      * Syntax Breakdown:
-     * 
+     *
      * 1. Return Type:
      *    std::unique_ptr<zip_t, zip_close_t>
      *    - unique_ptr: Smart pointer for automatic memory management
      *    - zip_t*: Raw pointer type being managed
      *    - zip_close_t: Type of custom deleter function
-     * 
+     *
      * 2. Parameters:
      *    const string &filePath
      *    - const: Promises not to modify the string
      *    - string &: Reference to avoid copying
-     * 
+     *
      * 3. Function Body:
      *    - Uses libzip's zip_open() C function
      *    - Converts C++ string to C-style with c_str()
@@ -96,7 +96,7 @@ namespace DocxParser {
      */
     unique_ptr<zip_t, zip_close_t> openDocxFile(const string &filePath) {
         // Error code storage (0 means success)
-        int zipError = 0;  
+        int zipError = 0;
 
         // Convert C++ string to C-style and open archive
         // zip_open() parameters:
@@ -108,11 +108,11 @@ namespace DocxParser {
         if (!zip) {
             // Build detailed error message
             string errorMsg = "Failed to open DOCX file: ";
-            errorMsg += (zipError != 0) 
+            errorMsg += (zipError != 0)
                 ? "Error code: " + to_string(zipError)
                 : "Unknown error";
-            
-            throw runtime_error(errorMsg);  
+
+            throw runtime_error(errorMsg);
         }
 
         // Create smart pointer with custom deleter
@@ -137,7 +137,7 @@ namespace DocxParser {
     // Reads styles.xml from an open ZIP archive into a vector<char>
     /**
      * @brief Shows buffer management pattern
-     * 
+     *
      * Common Patterns Used:
      * 1. Buffer Management:
      *    - Pre-allocates vector to exact needed size
@@ -199,7 +199,7 @@ namespace DocxParser {
  */
     /**
      * @brief Demonstrates C library integration pattern
-     * 
+     *
      * Common Patterns Used:
      * 1. C Library Integration:
      *    - Wraps C-style pointers in smart pointers
@@ -239,7 +239,7 @@ namespace DocxParser {
  */
     /**
      * @brief Shows XML DOM traversal pattern
-     * 
+     *
      * Common Patterns Used:
      * 1. Tree Traversal:
      *    - Iterates through child/sibling pointers
@@ -314,7 +314,7 @@ namespace DocxParser {
      */
     /**
      * @brief Demonstrates property extraction pattern
-     * 
+     *
      * Common Patterns Used:
      * 1. Visitor Pattern:
      *    - Visits each node to extract properties
@@ -484,7 +484,7 @@ namespace DocxParser {
  */
 /**
  * @brief Shows pipeline processing pattern
- * 
+ *
  * Common Patterns Used:
  * 1. Pipeline Pattern:
  *    - Each step transforms output for next step

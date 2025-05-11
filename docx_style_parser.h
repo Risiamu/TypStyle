@@ -39,11 +39,11 @@ struct StyleInfo {
 
     // Default constructor - initialize all members
     StyleInfo() : name(""), type(""), fontName(""), fontSize(""), properties() {}
-    
+
     // Prevent accidental copying
     StyleInfo(const StyleInfo&) = delete;
     StyleInfo& operator=(const StyleInfo&) = delete;
-    
+
     // Allow moving
     StyleInfo(StyleInfo&&) = default;
     StyleInfo& operator=(StyleInfo&&) = default;
@@ -51,32 +51,32 @@ struct StyleInfo {
 
 /**
  * @brief Namespace for DOCX style parsing functionality
- * 
+ *
  * Namespaces in C++:
- * 
+ *
  * 1. Purpose:
  *    - Prevent naming collisions between different code bases
  *    - Organize related functionality into logical groups
  *    - Provide a way to encapsulate library code
- * 
+ *
  * 2. Key Characteristics:
  *    - Scoped container for identifiers (functions, classes, variables)
  *    - Can be nested (namespaces within namespaces)
  *    - Can be extended across multiple files
  *    - Help avoid global namespace pollution
- * 
+ *
  * 3. Usage Patterns:
  *    - Access elements with scope operator (::)
  *      e.g. DocxParser::extractDocxStyles()
  *    - 'using namespace' brings all names into current scope
  *    - 'using' declaration brings specific names into scope
- * 
+ *
  * 4. Best Practices:
  *    - Use namespaces for library code
  *    - Avoid 'using namespace' in headers (can cause collisions)
  *    - Prefer fully qualified names in header files
  *    - Keep namespace names short but meaningful
- * 
+ *
  * 5. Common Namespaces:
  *    - std: Standard Library namespace
  *    - boost: Boost libraries namespace
